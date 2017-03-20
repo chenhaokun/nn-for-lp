@@ -41,13 +41,16 @@ def train_model(input_file_path,params):
     #u1s=tf.placeholder(tf.int32,shape=[None,])
     #u2s=tf.placeholder(tf.int32,shape=[None,])
     #ys=tf.placeholder(tf.float32,shape=[None,])
-    oh_u1s=tf.one_hot(u1s-tf.ones_like(u1s),depth=params['node_num'])
-    oh_u2s=tf.one_hot(u2s-tf.ones_like(u2s),depth=params['node_num'])
+    #oh_u1s=tf.one_hot(u1s-1,depth=params['node_num'])
+    #oh_u2s=tf.one_hot(u2s-1,depth=params['node_num'])
+
+    u1s -= 1
+    u2s -= 1
 
     weights1_1=tf.Variable(tf.ones([params['node_num'],params['h_len']]))
     weights1_2=tf.Variable(tf.ones([params['node_num'],params['h_len']]))
     biases1=tf.Variable(tf.zeros([params['h_len']]))
-    h1=tf.nn.softmax(tf.matmul(oh_u1s,weights1_1)+tf.matmul(oh_u2s,weights1_2)+biases1)
+    h1=tf.nn.softmax(tf.nn.embedding_lookup(weights1_1, u1s)+tf.nn.embedding_lookup(weights1_2, u2s)+biases1)
     
     weights2=tf.Variable(tf.ones([params['h_len'],params['h_len']]))
     biases2=tf.Variable(tf.zeros([params['h_len']]))
@@ -73,8 +76,8 @@ def train_model(input_file_path,params):
         coord.join(thread)
 
 def main():
-    input_file_path='../../data/data/train_data_csv'
-    params={'node_num':1632803,'edge_num':30622564,'round':20,'learning_rate':0.01,'batch_size':128,'h_len':10}
+    input_file_path='../../data/data/train_data_csv'#'../../data/data/train_data_csv'
+    params={'node_num':1632803,'edge_num':30622564,'round':20,'learning_rate':0.01,'batch_size':60000,'h_len':10}#{'node_num':1632803,'edge_num':30622564,'round':20,'learning_rate':0.01,'batch_size':60000,'h_len':10}
     train_model(input_file_path,params)
 
 if __name__=='__main__':
