@@ -17,4 +17,5 @@ def get_up_bound_id(source_file_path):
 	print count
 
 if __name__=='__main__':
-    get_up_bound_id('../../data/soc-pokec-relationships.txt')
+    #get_up_bound_id('../../data/data/soc-pokec-relationships.txt')
+    get_up_bound_id('../../data/test/tiny_data')
