@@ -1,5 +1,6 @@
 from sklearn.metrics import roc_auc_score
 from scipy.sparse.linalg import spsolve
+from divide_data_e2e import *
 from sklearn import metrics
 from scipy import sparse
 import tensorflow as tf
@@ -142,6 +143,7 @@ def mf_with_sigmoid(params):
             get_auc(t_ys_v, t_ys_pre_v), t_accuracy_v)
         stop_count = 0
         pre_auc = 0.0
+        max_auc = 0.0
         for i in range(params['round']):
             for j in range(data_size / params['batch_size']):
                 start = params['batch_size'] * j
@@ -163,6 +165,8 @@ def mf_with_sigmoid(params):
                 t_target_loss_v,
                 get_auc(t_ys_v, t_ys_pre_v), t_accuracy_v)
             cur_auc = get_auc(t_ys_v, t_ys_pre_v)
+            if cur_auc > max_auc:
+                max_auc = cur_auc
             if (cur_auc - pre_auc) < 0.0001:
                 stop_count += 1
             pre_auc = cur_auc
@@ -171,6 +175,7 @@ def mf_with_sigmoid(params):
                     store_dict = {'u1s': dtest[0:800000, 0], 'u2s': dtest[0:800000, 1], 'ys': t_ys_v, 'ys_pre': t_ys_pre_v}
                     store_obj(store_dict, params['mf_test_result_file_path'])
                 break
+        return max_auc
 
 def show_auc_curve(params):
     neighbor_set_list = load_obj(params['neighbor_set_list_file_path'])
@@ -209,19 +214,21 @@ def show_auc_curve(params):
             # if i==0 and j==2:
             #     print tmp_list1, tmp_list2
             auc_list.append(get_auc(tmp_list1, tmp_list2))
+            # print sum(tmp_list1)
         print(m_list[j])
         for i in range(points):
             print(auc_list[i])
-        plot_list.append(pl.plot(x_list, auc_list, color_list[j]))
+        tmpplot, = pl.plot(x_list, auc_list, color_list[j])
+        plot_list.append(tmpplot)
 
-    pl.title('cold start auc')  # give plot a title
-    pl.xlabel('node degree')  # make axis labels
+    pl.title('cold start auc in openfilghts dataset')  # give plot a title
+    pl.xlabel('max node degree')  # make axis labels
     pl.ylabel('auc')
 
     # pl.xlim(1, 10)  # set axis limits
     pl.ylim(0.78, 1.00)
 
-    pl.legend(plot_list, ('mf', 'pnn1', 'pnn2'))  # make legend
+    pl.legend(tuple(plot_list), ('mf', 'pnn1', 'pnn2'))  # make legend
     pl.show()  # show the plot on the screen
 
 def cn_lr(params):
@@ -609,6 +616,8 @@ def pnn_test(params):
             get_auc(t_ys_v, t_ys_pre_v), t_accuracy_v)
         stop_count = 0
         pre_auc = 0.0
+        max_auc = 0.0
+        store_dict = {}
         for i in range(params['round']):
             for j in range(data_size / params['batch_size']):
                 start = params['batch_size'] * j
@@ -631,13 +640,15 @@ def pnn_test(params):
                 t_loss_v,
                 t_target_loss_v, get_auc(t_ys_v, t_ys_pre_v), t_accuracy_v)
             cur_auc = get_auc(t_ys_v, t_ys_pre_v)
+            if cur_auc > max_auc:
+                store_dict = {'u1s': dtest[0:800000, 0], 'u2s': dtest[0:800000, 1], 'ys': t_ys_v,
+                              'ys_pre': t_ys_pre_v}
+                max_auc = cur_auc
             if (cur_auc - pre_auc) < 0.0001:
                 stop_count += 1
             pre_auc = cur_auc
             if stop_count == 3 or i == (params['round'] - 1):
                 if params['store_test_result']:
-                    store_dict = {'u1s': dtest[0:800000, 0], 'u2s': dtest[0:800000, 1], 'ys': t_ys_v,
-                                  'ys_pre': t_ys_pre_v}
                     store_obj(store_dict, params['pnn1_test_result_file_path'])
                 break
         weight1_v, biase1_v, weight2_v, biase2_v, weight3_v, biase3_v, weighto_v, biaseo_v, embedding_v = sess.run(
@@ -649,6 +660,7 @@ def pnn_test(params):
                      'weight3_v': weight3_v, 'biase3_v': biase3_v, 'weighto_v': weighto_v, 'biaseo_v': biaseo_v, 'embedding_v': embedding_v}
         store_obj(save_dict, params['model_save_path'])
         print 'pnn1 completed'
+        return max_auc
 
 # two embedding p and q
 def pnn_test2(params):
@@ -1071,6 +1083,7 @@ def pnn_with_ann_test(params):
         steps_of_round_b = data_size_b / params['batch_size']
         stop_count = 0
         pre_auc = 0.0
+        max_auc = 0.0
         for i in range(params['round']):
             j = 0
             while (j < steps_of_round_b):
@@ -1112,14 +1125,17 @@ def pnn_with_ann_test(params):
                 get_auc(t_ys_a_v, t_ys_pre_a_v), loss_b_v, target_loss_b_v, get_auc(ys_b_v, ys_pre_b_v))
 
             cur_auc = get_auc(t_ys_a_v, t_ys_pre_a_v)
+            if cur_auc > max_auc:
+                store_dict = {'u1s': dtest_a[0:800000, 0], 'u2s': dtest_a[0:800000, 1], 'ys': t_ys_a_v, 'ys_pre': t_ys_pre_a_v}
+                max_auc = cur_auc
             if (cur_auc - pre_auc) < 0.0001:
                 stop_count += 1
             pre_auc = cur_auc
             if stop_count == 4:
                 if params['store_test_result']:
-                    store_dict = {'u1s': dtest_a[0:800000, 0], 'u2s': dtest_a[0:800000, 1], 'ys': t_ys_a_v, 'ys_pre': t_ys_pre_a_v}
                     store_obj(store_dict, params['pnn2_test_result_file_path'])
                 break
+        return max_auc
 
 # two embedding p and q
 def pnn_with_ann_test2(params):
@@ -2054,11 +2070,12 @@ def base_exp(params):
                       'h1_size': 20, 'h2_size': 20, 'h3_size': 20, 'h4_size': 20,
                       'batch_size': 5000, 'round': 15, 'learning_rate': 4e-3, 'beta': 4e-4})
     if params['show_auc_curve']:
+        # dir1 = '../../data/gpu/'
         show_auc_curve({'mf_test_result_file_path': dir + '%s_mf_test_result_v%d' % (data_name, version),
                         'pnn1_test_result_file_path': dir + '%s_pnn1_test_result_v%d' % (data_name, version),
                         'pnn2_test_result_file_path': dir + '%s_pnn2_test_result_v%d' % (data_name, version),
                         'neighbor_set_list_file_path': dir + '%s_train_neighbor_set_list_v%d' % (data_name, version),
-                        'x_max': 10,
+                        'x_max': 40,
                         'x_step': 1})
     # if len(params['pnn1_test2'])>0:
     #     p = params['pnn1_test2']
@@ -2132,7 +2149,73 @@ def pnn2_without_pt_exp(params):
     print('coding')
 
 def completeness_exp(params):
-    print('coding')
+    path_list = params['source_file_path'].split('/')
+    dir = '/'.join(path_list[0:-1]) + '/'
+    dir_ = dir + 'completeness/'
+    data_name = path_list[-1].split('_')[0]
+    version = params['version']
+    node_num = get_max_node_num(params['source_file_path'])
+
+    if params['divide_data']:
+        randomly_divide_data_with_accumulation(params['source_file_path'],
+                             [(dir_ + '%s_completeness_positive_data_v%d_part_%d' % (data_name, version, i)) for i in range(1, params['training_set_num']+2)],
+                             [1 for i in range(params['training_set_num']+1)])
+        sample_negative_data(dir_ + '%s_completeness_positive_data_v%d_part_%d' % (data_name, version, params['training_set_num']+1),
+                             dir_ + '%s_completeness_negative_data_v%d_part_%d' % (data_name, version, params['training_set_num']+1),
+                             params['train_np_rate'],
+                             node_num,
+                             [])
+        for i in range(1, params['training_set_num']+1):
+            sample_negative_data(
+                dir_ + '%s_completeness_positive_data_v%d_part_%d' % (data_name, version, i),
+                dir_ + '%s_completeness_negative_data_v%d_part_%d' % (data_name, version, i),
+                params['train_np_rate'],
+                node_num,
+                [dir_ + '%s_completeness_positive_data_v%d_part_%d' % (data_name, version, params['training_set_num']+1),
+                dir_ + '%s_completeness_negative_data_v%d_part_%d' % (data_name, version, params['training_set_num']+1)])
+            get_neighbor_set(dir_ + '%s_completeness_positive_data_v%d_part_%d' % (data_name, version, i),
+                             dir_ + '%s_completeness_neighbor_set_list_v%d_part_%d' % (data_name, version, i),
+                             node_num)
+            get_hop2_link(dir_ + '%s_completeness_positive_data_v%d_part_%d' % (data_name, version, i),
+                          dir_ + '%s_completeness_hop2_positive_data_v%d_part_%d' % (data_name, version, i),
+                          dir_ + '%s_completeness_neighbor_set_list_v%d_part_%d' % (data_name, version, i),
+                          False, params['h_sample_rate'] * params['training_set_num']/i)
+
+        for i in range(1, params['training_set_num']+2):
+            get_tdata_with_lable(dir_ + '%s_completeness_positive_data_v%d_part_%d' % (data_name, version, i),
+                                 dir_ + '%s_completeness_negative_data_v%d_part_%d' % (data_name, version, i),
+                                 dir_ + '%s_completeness_data_v%d_part_%d' % (data_name, version, i))
+
+    store_dict = {'mf': [], 'pnn1': [], 'pnn2': []}
+    for i in range(1, params['training_set_num']+1):
+        store_dict['mf'].append(mf_with_sigmoid({'dtrain_file_path': dir_ + '%s_completeness_data_v%d_part_%d' % (data_name, version, i),
+                         'dtest_file_path': dir_ + '%s_completeness_data_v%d_part_%d' % (data_name, version, params['training_set_num']+1),
+                         'embedding_size': 20, 'node_num': node_num, 'train_np_rate': params['train_np_rate'],
+                         'batch_size': 5000, 'round': 25, 'learning_rate': 5e-3, 'beta': 4e-1,
+                         'store_test_result': False,
+                         'mf_test_result_file_path': ''}))
+        store_dict['pnn1'].append(pnn_test({'dtrain_file_path': dir_ + '%s_completeness_data_v%d_part_%d' % (data_name, version, i),
+                  'dtest_file_path': dir_ + '%s_completeness_data_v%d_part_%d' % (data_name, version, params['training_set_num']+1),
+                  'model_save_path': dir_ + '%s_completeness_model_saver_v%d_part_%d' % (data_name, version, i),
+                  'embedding_size': 20, 'node_num': node_num,
+                  'h1_size': 20, 'h2_size': 20, 'h3_size': 20, 'h4_size': 20,
+                  'batch_size': 5000, 'round': 25, 'learning_rate': 4e-3, 'beta': 4e-4,
+                  'store_test_result': False,
+                  'pnn1_test_result_file_path': ''}))
+        store_dict['pnn2'].append(pnn_with_ann_test({'dtrain_a_file_path': dir_ + '%s_completeness_data_v%d_part_%d' % (data_name, version, i),
+                           'dtest_a_file_path': dir_ + '%s_completeness_data_v%d_part_%d' % (data_name, version, params['training_set_num']+1),
+                           'dtrain_b_file_path': dir_ + '%s_completeness_hop2_positive_data_v%d_part_%d' % (data_name, version, i),
+                           'pre_model_save_path': dir_ + '%s_completeness_model_saver_v%d_part_%d' % (data_name, version, i),
+                           'embedding_size': 20, 'node_num': node_num,
+                           'h1_size': 20, 'h2_size': 20, 'h3_size': 20, 'h4_size': 20,
+                           'batch_size': 5000, 'round': 25, 'learning_rate1': 4e-3,
+                           'learning_rate2': 4e-3, 'beta1': 4e-4, 'beta2': 4e-4,
+                           'hop2_np_rate': params['hop2_np_rate'],
+                           'store_test_result': False,
+                           'pnn2_test_result_file_path': ''
+                           }))
+    print store_dict
+    store_obj(store_dict, dir_ + '%s_completeness_result_v%d' % (data_name, version))
 
 if __name__ == '__main__':
     # base_exp({'source_file_path': '../../data/test1/cora_data',
@@ -2157,14 +2240,22 @@ if __name__ == '__main__':
 
     # show_params_test_result({'source_file_path': '../../data/test1/openflights_data', 'version': 1})
 
-    base_exp({'source_file_path': '../../data/test1/openflights_data',
-              'version': 1,
-              'train_np_rate': 160,
-              'baseline_set': set(['cn', 'aa', 'ra', 'katz', 'rwr', 'mf']),
-              'pnn1_test': {'round': 25},
-              'pnn1': False,
-              'fixed_emb_pnn2': False,
-              'pnn2_test': {'learning_rate1': 4e-3, 'learning_rate2': 4e-3, 'beta1': 4e-4, 'beta2': 4e-4, 'hop2_np_rate': 40, 'round': 25},
-              'pnn2': False,
-              'store_test_result': True,
-              'show_auc_curve': True})
+    # base_exp({'source_file_path': '../../data/test1/openflights_data',
+    #           'version': 1,
+    #           'train_np_rate': 160,
+    #           'baseline_set': set(['cn', 'aa', 'ra', 'katz', 'rwr', 'mf']),
+    #           'pnn1_test': {'round': 25},
+    #           'pnn1': False,
+    #           'fixed_emb_pnn2': False,
+    #           'pnn2_test': {'learning_rate1': 4e-3, 'learning_rate2': 4e-3, 'beta1': 4e-4, 'beta2': 4e-4, 'hop2_np_rate': 40, 'round': 25},
+    #           'pnn2': False,
+    #           'store_test_result': True,
+    #           'show_auc_curve': True})
+    # completeness_exp({'source_file_path': '../../data/test1/openflights_data',
+    #                   'version': 1,
+    #                   'train_np_rate': 160,
+    #                   'hop2_np_rate': 20,
+    #                   'h_sample_rate': 4,
+    #                   'training_set_num': 4,
+    #                   'divide_data': True})
+    print()

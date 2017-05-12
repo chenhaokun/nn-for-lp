@@ -48,6 +48,34 @@ def randomly_divide_data(source_file_path, target_file_path_list, weight_list):
 
     print('randomly_divide_data completed\n')
 
+def randomly_divide_data_with_accumulation(source_file_path, target_file_path_list, weight_list):
+    print('starting randomly_divide_data_with_accumulation')
+
+    with open(source_file_path, 'r') as source_file:
+        source_list = source_file.readlines()
+        random.shuffle(source_list)
+        line_num = len(source_list)
+
+        sum = 0
+        for weight in weight_list:
+            sum += weight
+
+        thredhold_list = [0]
+        slide_sum = 0
+        for weight in weight_list:
+            slide_sum += weight
+            thredhold_list.append(int(float(slide_sum) / sum * line_num))
+
+        for i in range(len(target_file_path_list)):
+            with open(target_file_path_list[i], 'w') as target_file:
+                if i == (len(weight_list)-1):
+                    target_file.writelines(source_list[thredhold_list[i]:thredhold_list[i + 1]])
+                else:
+                    target_file.writelines(source_list[thredhold_list[0]:thredhold_list[i+1]])
+                print('\tfile%d positive edge count: %d'%(i, thredhold_list[i+1]-thredhold_list[i]))
+
+    print('randomly_divide_data_with_accumulation completed\n')
+
 def sample_negative_data(source_file_path, target_file_path, np_rate, node_num, except_list):
     print('starting sample_negative_data')
 
