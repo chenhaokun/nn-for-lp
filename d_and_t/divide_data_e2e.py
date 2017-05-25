@@ -48,6 +48,33 @@ def randomly_divide_data(source_file_path, target_file_path_list, weight_list):
 
     print('randomly_divide_data completed\n')
 
+def add_noise(source_file_path, except_file_path, node_num, ns_rate):
+    print('starting add_noise')
+
+    result_list = []
+    with open(source_file_path, 'r') as source_file, open(except_file_path, 'r') as except_file:
+        edge_set = set()
+        except_set = set()
+        for line in source_file:
+            edge_set.add(line)
+        for line in except_file:
+            except_set.add(line)
+        target_num = int((1 + ns_rate) * len(edge_set))
+        while target_num > len(edge_set):
+            a = random.randint(1, node_num)
+            b = random.randint(1, node_num)
+            newline = '%d\t%d\n'%(a,b)
+            if a != b and newline not in edge_set and newline not in except_set:
+                edge_set.add(newline)
+
+        result_list = [line for line in edge_set]
+
+    with open(source_file_path, 'w') as target_file:
+        target_file.writelines(result_list)
+        print('noise file line count: %d'%len(result_list))
+
+    print('add_noise completed\n')
+
 def randomly_divide_data_with_accumulation(source_file_path, target_file_path_list, weight_list):
     print('starting randomly_divide_data_with_accumulation')
 
@@ -72,7 +99,7 @@ def randomly_divide_data_with_accumulation(source_file_path, target_file_path_li
                     target_file.writelines(source_list[thredhold_list[i]:thredhold_list[i + 1]])
                 else:
                     target_file.writelines(source_list[thredhold_list[0]:thredhold_list[i+1]])
-                print('\tfile%d positive edge count: %d'%(i, thredhold_list[i+1]-thredhold_list[i]))
+                print('\tfile%d adding positive edge count: %d'%(i, thredhold_list[i+1]-thredhold_list[i]))
 
     print('randomly_divide_data_with_accumulation completed\n')
 
@@ -185,6 +212,7 @@ def get_hop2_link(source_file_path, target_file_path, neighbor_set_list_file_pat
 
     # friends_dict = {}
     result_set = set()
+    result_list = []
 
     # with open(source_file_path, 'r') as source_file:
     #     for line in source_file:
@@ -217,21 +245,20 @@ def get_hop2_link(source_file_path, target_file_path, neighbor_set_list_file_pat
                 idegree = len(neighbor_set_list[i-1][0])
                 if odegree == 0:
                     for l in range(h_sample_rate):
-                        result_set.add('%d\t%d\n' % (i, j))
+                        result_list.append('%d\t%d\n' % (i, j))
                 else:
                     for l in range(h_sample_rate):
                         b = random.sample(neighbor_set_list[j-1][1], 1)[0] + 1
-                        result_set.add('%d\t%d\n' % (i, b))
+                        result_list.append('%d\t%d\n' % (i, b))
                 if idegree == 0:
                     for l in range(h_sample_rate):
-                        result_set.add('%d\t%d\n' % (i, j))
+                        result_list.append('%d\t%d\n' % (i, j))
                 else:
                     for l in range(h_sample_rate):
                         a = random.sample(neighbor_set_list[i-1][0], 1)[0] + 1
-                        result_set.add('%d\t%d\n' % (a, j))
-            result_list = [line for line in result_set]
+                        result_list.append('%d\t%d\n' % (a, j))
             target_file.writelines(result_list)
-        print('\thop2 positive edge count: %d' % len(result_set))
+        print('\thop2 positive edge count: %d' % len(result_list))
     print('get_hop2_link completed\n')
 
 def get_tdata_with_lable(positive_data_file_path, negative_data_file_path, target_data_file_path):
@@ -329,7 +356,7 @@ def divide_data_e2e(params):
         get_katz_matrix(dir + '%s_train_positive_data_v%d' % (data_name, version),
                          dir + '%s_train_katz_matrix_v%d' % (data_name, version),
                          node_num,
-                         0.9,
+                         0.1,
                          params['exact_katz'])
 
     if params['get_rwr_matrix']:
@@ -337,7 +364,7 @@ def divide_data_e2e(params):
                        dir + '%s_train_neighbor_set_list_v%d' % (data_name, version),
                        dir + '%s_train_rwr_matrix_v%d' % (data_name, version),
                        node_num,
-                       0.1,
+                       0.99,
                        params['exact_rwr'])
 
     if params['get_hop2_data']:
@@ -357,18 +384,19 @@ def divide_data_e2e(params):
 if __name__ == '__main__':
     # gen_random_data('../../data/test1/random_data', 50000, 5000)
 
-    divide_data_e2e({'source_file_path': '../../data/test1/openflights_data',
-                     'version': 1,
-                     'tt_rate': 4,
-                     'train_np_rate': 160,
-                     'test_np_rate': 160,
-                     'new_divide': True,
-                     'new_tt_data': True,
-                     'get_neighbor_set': True,
-                     'get_katz_matrix': True,
-                     'exact_katz': True,
-                     'get_rwr_matrix': True,
-                     'exact_rwr': True,
-                     'get_hop2_data': True,
-                     'random_p': False,
-                     })
+    # divide_data_e2e({'source_file_path': '../../data/test1/openflights_data',
+    #                  'version': 1,
+    #                  'tt_rate': 4,
+    #                  'train_np_rate': 160,
+    #                  'test_np_rate': 160,
+    #                  'new_divide': True,
+    #                  'new_tt_data': True,
+    #                  'get_neighbor_set': True,
+    #                  'get_katz_matrix': True,
+    #                  'exact_katz': True,
+    #                  'get_rwr_matrix': True,
+    #                  'exact_rwr': True,
+    #                  'get_hop2_data': True,
+    #                  'random_p': False,
+    #                  })
+    print()
