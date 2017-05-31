@@ -3,24 +3,24 @@ from graph_interpreter import *
 from divide_data_e2e import *
 
 if __name__ == '__main__':
-    divide_data_e2e({'source_file_path': '../../data/test1/openflights_data',
-                                      'version': 2,
-                                      'tt_rate': 4,
-                                      'train_np_rate': 160,
-                                      'test_np_rate': 160,
-                                      'new_divide': True,
-                                      'new_tt_data': False,
-                                      'get_neighbor_set': False,
-                                      'get_katz_matrix': False,
-                                      'exact_katz': True,
-                                      'get_rwr_matrix': False,
-                                      'exact_rwr': True,
-                                      'get_hop2_data': False,
-                                      'random_p': False})
-
-    noise_exp({'source_file_path': '../../data/test1/openflights_data',
-               'version': 2,
-               'ns_rate_list': [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]})
+    # divide_data_e2e({'source_file_path': '../../data/test1/openflights_data',
+    #                                   'version': 2,
+    #                                   'tt_rate': 4,
+    #                                   'train_np_rate': 160,
+    #                                   'test_np_rate': 160,
+    #                                   'new_divide': True,
+    #                                   'new_tt_data': False,
+    #                                   'get_neighbor_set': False,
+    #                                   'get_katz_matrix': False,
+    #                                   'exact_katz': True,
+    #                                   'get_rwr_matrix': False,
+    #                                   'exact_rwr': True,
+    #                                   'get_hop2_data': False,
+    #                                   'random_p': False})
+    #
+    # noise_exp({'source_file_path': '../../data/test1/openflights_data',
+    #            'version': 2,
+    #            'ns_rate_list': [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]})
 
     # divide_data_e2e({'source_file_path': '../../data/test1/small_data',
     #                   'version': 1,
@@ -69,28 +69,28 @@ if __name__ == '__main__':
 
 
     # show_params_test_result({'source_file_path': '../../data/test1/small_data', 'version': 1})
-    # show_params_exp_result('hidden_layer')
-    # base_exp({'source_file_path': '../../data/test1/openflights_data',
-    #           'version': 1,
-    #           'train_np_rate': 160,
-    #           'baseline_set': set([]),
-    #           'pnn1_test': {},
-    #           'pnn1': False,
-    #           'fixed_emb_pnn2': False,
-    #           'pnn2_test': {},
-    #           'pnn2': False,
-    #           'store_test_result': False,
-    #           'show_auc_curve': {'x_min':1, 'x_max':22, 'x_step':3, 'y_min':0.80, 'y_max':0.999}})
+    # show_params_exp_result('embedding_size')
+    base_exp({'source_file_path': '../../data/test1/openflights_data',
+              'version': 20,
+              'train_np_rate': 160,
+              'baseline_set': set([]),
+              'pnn1_test': {},
+              'pnn1': False,
+              'fixed_emb_pnn2': False,
+              'pnn2_test': {},
+              'pnn2': False,
+              'store_test_result': False,
+              'show_auc_curve': {},#'x_min':1, 'x_max':22, 'x_step':3, 'y_min':0.80, 'y_max':0.969
+              'show_embedding_distribution': {'x_min': 1, 'x_max': 22, 'x_step': 3, 'y_min': 0.80, 'y_max': 0.969}})
     # show_completeness_test_result({'source_file_path': '../../data/test1/small_data', 'version': 1})
-    # show_noise_exp_result('openflights2')
-
+    # show_noise_exp_result('pokec1')
 
 
 
 
 
     # divide_data_e2e({'source_file_path': '../../data/test1/openflights_data',
-    #                  'version': 1,
+    #                  'version': 20,
     #                  'tt_rate': 4,
     #                  'train_np_rate': 160,
     #                  'test_np_rate': 160,
@@ -103,18 +103,19 @@ if __name__ == '__main__':
     #                  'exact_rwr': True,
     #                  'get_hop2_data': True,
     #                  'random_p': False})
-    #
+
     # base_exp({'source_file_path': '../../data/test1/openflights_data',
-    #           'version': 1,
+    #           'version': 20,
     #           'train_np_rate': 160,
     #           'baseline_set': set(['mf']),
-    #           'pnn1_test': {'round': 25},
+    #           'pnn1_test': {},#{'round': 25},
     #           'pnn1': False,
     #           'fixed_emb_pnn2': False,
-    #           'pnn2_test': {'learning_rate1': 4e-3, 'learning_rate2': 4e-3, 'beta1': 4e-4, 'beta2': 4e-4, 'hop2_np_rate': 40, 'round': 25},
+    #           'pnn2_test': {},#{'learning_rate1': 4e-3, 'learning_rate2': 4e-3, 'beta1': 4e-4, 'beta2': 4e-4, 'hop2_np_rate': 40, 'round': 25},
     #           'pnn2': False,
     #           'store_test_result': True,
-    #           'show_auc_curve': {}})
+    #           'show_auc_curve': {},
+    #           'show_embedding_distribution': {}})
     #
     # divide_data_e2e({'source_file_path': '../../data/test1/cora_data',
     #                  'version': 1,
@@ -141,7 +142,8 @@ if __name__ == '__main__':
     #           'pnn2_test': {'learning_rate1': 4e-3, 'learning_rate2': 4e-3, 'beta1': 4e-4, 'beta2': 4e-4, 'hop2_np_rate': 40, 'round': 25},
     #           'pnn2': False,
     #           'store_test_result': True,
-    #           'show_auc_curve': {}})
+    #           'show_auc_curve': {},
+    #           'show_embedding_distribution': {}})
     #
     # divide_data_e2e({'source_file_path': '../../data/test1/small_data',
     #                  'version': 1,
@@ -168,7 +170,8 @@ if __name__ == '__main__':
     #           'pnn2_test': {'learning_rate1': 4e-3, 'learning_rate2': 4e-3, 'beta1': 4e-4, 'beta2': 4e-4, 'hop2_np_rate': 80, 'round': 25},
     #           'pnn2': False,
     #           'store_test_result': True,
-    #           'show_auc_curve': {}})
+    #           'show_auc_curve': {},
+    #           'show_embedding_distribution': {}})
     #
     # divide_data_e2e({'source_file_path': '../../data/test1/small_data',
     #                  'version': 2,
@@ -196,7 +199,8 @@ if __name__ == '__main__':
     #                         'hop2_np_rate': 160, 'round': 25},
     #           'pnn2': False,
     #           'store_test_result': True,
-    #           'show_auc_curve': {}})
+    #           'show_auc_curve': {},
+    #           'show_embedding_distribution': {}})
     #
     # divide_data_e2e({'source_file_path': '../../data/test1/enron_data',
     #                 'version': 1,
@@ -223,7 +227,8 @@ if __name__ == '__main__':
     #           'pnn2_test': {},
     #           'pnn2': False,
     #           'store_test_result': True,
-    #           'show_auc_curve': {}})
+    #           'show_auc_curve': {},
+    #           'show_embedding_distribution': {}})
 
     # completeness_exp({'source_file_path': '../../data/test1/openflights_data',
     #                   'version': 1,
@@ -268,7 +273,8 @@ if __name__ == '__main__':
     #                         'hop2_np_rate': 10, 'round': 25},
     #           'pnn2': False,
     #           'store_test_result': True,
-    #           'show_auc_curve': {}})
+    #           'show_auc_curve': {},
+    #           'show_embedding_distribution': {}})
     #
     # divide_data_e2e({'source_file_path': '../../data/test1/small_data',
     #                  'version': 11,
@@ -296,7 +302,8 @@ if __name__ == '__main__':
     #                         'hop2_np_rate': 20, 'round': 25},
     #           'pnn2': False,
     #           'store_test_result': True,
-    #           'show_auc_curve': {}})
+    #           'show_auc_curve': {},
+    #           'show_embedding_distribution': {}})
     #
     # divide_data_e2e({'source_file_path': '../../data/test1/small_data',
     #                  'version': 12,
@@ -324,7 +331,8 @@ if __name__ == '__main__':
     #                         'hop2_np_rate': 40, 'round': 25},
     #           'pnn2': False,
     #           'store_test_result': True,
-    #           'show_auc_curve': {}})
+    #           'show_auc_curve': {},
+    #           'show_embedding_distribution': {}})
     #
 
     # divide_data_e2e({'source_file_path': '../../data/test1/small_data',
@@ -353,7 +361,8 @@ if __name__ == '__main__':
     #                         'hop2_np_rate': 80, 'round': 25},
     #           'pnn2': False,
     #           'store_test_result': True,
-    #           'show_auc_curve': {}})
+    #           'show_auc_curve': {},
+    #           'show_embedding_distribution': {}})
     #
     # divide_data_e2e({'source_file_path': '../../data/test1/small_data',
     #                  'version': 13,
@@ -381,7 +390,8 @@ if __name__ == '__main__':
     #                         'hop2_np_rate': 80, 'round': 25},
     #           'pnn2': False,
     #           'store_test_result': True,
-    #           'show_auc_curve': {}})
+    #           'show_auc_curve': {},
+    #           'show_embedding_distribution': {}})
     #
     # divide_data_e2e({'source_file_path': '../../data/test1/small_data',
     #                  'version': 14,
@@ -409,7 +419,8 @@ if __name__ == '__main__':
     #                         'hop2_np_rate': 160, 'round': 25},
     #           'pnn2': False,
     #           'store_test_result': True,
-    #           'show_auc_curve': {}})
+    #           'show_auc_curve': {},
+    #           'show_embedding_distribution': {}})
     #
     # divide_data_e2e({'source_file_path': '../../data/test1/small_data',
     #                  'version': 14,
@@ -437,7 +448,8 @@ if __name__ == '__main__':
     #                         'hop2_np_rate': 160, 'round': 25},
     #           'pnn2': False,
     #           'store_test_result': True,
-    #           'show_auc_curve': {}})
+    #           'show_auc_curve': {},
+    #           'show_embedding_distribution': {}})
     #
     # divide_data_e2e({'source_file_path': '../../data/test1/small_data',
     #                  'version': 15,
@@ -465,7 +477,8 @@ if __name__ == '__main__':
     #                         'hop2_np_rate': 160, 'round': 25},
     #           'pnn2': False,
     #           'store_test_result': True,
-    #           'show_auc_curve': {}})
+    #           'show_auc_curve': {},
+    #           'show_embedding_distribution': {}})
     #
     #
     # divide_data_e2e({'source_file_path': '../../data/test1/small_data',
@@ -494,7 +507,8 @@ if __name__ == '__main__':
     #                         'hop2_np_rate': 160, 'round': 25},
     #           'pnn2': False,
     #           'store_test_result': True,
-    #           'show_auc_curve': {}})
+    #           'show_auc_curve': {},
+    #           'show_embedding_distribution': {}})
     #
     # divide_data_e2e({'source_file_path': '../../data/test1/small_data',
     #                  'version': 15,
@@ -522,7 +536,8 @@ if __name__ == '__main__':
     #                         'hop2_np_rate': 160, 'round': 25},
     #           'pnn2': False,
     #           'store_test_result': True,
-    #           'show_auc_curve': {}})
+    #           'show_auc_curve': {},
+    #           'show_embedding_distribution': {}})
     #
     # divide_data_e2e({'source_file_path': '../../data/test1/small_data',
     #                  'version': 16,
@@ -550,7 +565,8 @@ if __name__ == '__main__':
     #                         'hop2_np_rate': 160, 'round': 25},
     #           'pnn2': False,
     #           'store_test_result': True,
-    #           'show_auc_curve': {}})
+    #           'show_auc_curve': {},
+    #           'show_embedding_distribution': {}})
 
 
 

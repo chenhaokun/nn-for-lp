@@ -101,8 +101,8 @@ def mf_with_sigmoid(params):
 
     p = tf.Variable(tf.truncated_normal([params['node_num'], params['embedding_size']], mean=0, stddev=0.01))
     q = tf.Variable(tf.truncated_normal([params['node_num'], params['embedding_size']], mean=0, stddev=0.01))
-    wp = tf.Variable(tf.truncated_normal([params['embedding_size']], mean=0, stddev=0.01))
-    wq = tf.Variable(tf.truncated_normal([params['embedding_size']], mean=0, stddev=0.01))
+    # wp = tf.Variable(tf.truncated_normal([params['embedding_size']], mean=0, stddev=0.01))
+    # wq = tf.Variable(tf.truncated_normal([params['embedding_size']], mean=0, stddev=0.01))
     # bp = tf.Variable(tf.zeros([params['node_num']]))
     # bq = tf.Variable(tf.zeros([params['node_num']]))
 
@@ -115,10 +115,10 @@ def mf_with_sigmoid(params):
     # b1 = tf.nn.embedding_lookup(bp, u1s)
     # b2 = tf.nn.embedding_lookup(bq, u2s)
     dot_e = e1 * e2
-    t1 = e1 * wp
-    t2 = e2 * wq
+    # t1 = e1 * wp
+    # t2 = e2 * wq
 
-    ys_pre = tf.reduce_sum(dot_e, 1) + tf.reduce_sum(t1, 1) + tf.reduce_sum(t2, 1)
+    ys_pre = tf.reduce_sum(dot_e, 1)# + tf.reduce_sum(t1, 1) + tf.reduce_sum(t2, 1)
     # ys_pre = b1 + b2
 
     # target_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(ys_pre, ys))
@@ -183,7 +183,8 @@ def mf_with_sigmoid(params):
             pre_auc = cur_auc
             if stop_count == 2:
                 if params['store_test_result']:
-                    store_dict = {'u1s': dtest[0:800000, 0], 'u2s': dtest[0:800000, 1], 'ys': t_ys_v, 'ys_pre': t_ys_pre_v}
+                    p_v, q_v = sess.run([p, q], feed_dict={})
+                    store_dict = {'p': list(p_v), 'q': list(q_v), 'u1s': list(dtest[0:800000, 0]), 'u2s': list(dtest[0:800000, 1]), 'ys': list(t_ys_v), 'ys_pre': list(t_ys_pre_v)}
                     store_obj(store_dict, params['mf_test_result_file_path'])
                 break
         return max_auc
@@ -301,7 +302,6 @@ def show_auc_curve(params):
     pl.legend(tuple(plot_list), ('pnn2', 'pnn1', 'mf'), fontsize=24)  # make legend
     pl.show()  # show the plot on the screen
 
-
 def show_auc_curve_by_user(params):
     neighbor_set_list = load_obj(params['neighbor_set_list_file_path'])
     points = (params['x_max'] - params['x_min'])/params['x_step']
@@ -359,6 +359,7 @@ def show_auc_curve_by_user_v2(params):
     points = (params['x_max'] - params['x_min'])/params['x_step']
     x_list = range(params['x_min']+params['x_step']-1, params['x_max'], params['x_step'])
     m_list = ['pnn2', 'pnn1', 'mf']#['pnn2', 'pnn1', 'mf']
+    name_list = ['DLPM', 'DLPM-N', 'mf']
     plot_list = []
     color_list = ['b-*', 'g-o', 'r-^']
 
@@ -394,7 +395,7 @@ def show_auc_curve_by_user_v2(params):
         plot_list.append(tmpplot)
         alist.append(auc_list)
 
-    pl.title('cold start auc curve in %s'%'openflights', fontsize=24)  # give plot a title
+    pl.title('cold start auc curve in %s'%'pokec', fontsize=24)  # give plot a title
     pl.xlabel('max node degree', fontsize=24)  # make axis labels
     pl.ylabel('auc', fontsize=24)
 
@@ -402,12 +403,12 @@ def show_auc_curve_by_user_v2(params):
     pl.ylim(params['y_min'], params['y_max'])
     pl.tick_params(labelsize=20)
 
-    pl.legend(tuple(plot_list), ('pnn2', 'pnn1', 'mf'), fontsize=24, ncol=1, loc=4)  # make legend
+    pl.legend(tuple(plot_list), ('DLPM-N', 'DLPM', 'mf'), fontsize=20, ncol=1, loc=4)  # make legend
     figure=pl.figure()
     axes = figure.add_subplot(111)
 
     pl.plot(x_list, map(lambda x:(alist[0][x]-alist[1][x])*100,range(len(alist[0]))), 'r-o', linewidth=2.0)
-    pl.title('improved auc comparing pnn2 to pnn1', fontsize=22)  # give plot a title
+    pl.title('improved auc comparing DLPM-N to DLPM', fontsize=20)  # give plot a title
     pl.xlabel('max node degree', fontsize=24)  # make axis labels
     pl.ylabel('improved auc', fontsize=24)
     pl.tick_params(labelsize=20)
@@ -418,6 +419,216 @@ def show_auc_curve_by_user_v2(params):
     # plt.xticks(fontsize=20)
     # plt.yticks(fontsize=20)
     pl.show()  # show the plot on the screen
+
+def show_embedding_distribution(params):
+    thred1 = 0.9575#5009
+    thred2 = 0.238#5009
+    thred3 = 0.274#5009
+    plot_list = []
+
+    # buckets_num = 50
+    # step_len = 2.0/buckets_num
+    # x_list = np.arange(-1, 1, step_len)
+    # y_list_tmp = [0 for i in range(int(buckets_num))]
+
+    buckets_num = 50
+    max = 8.0
+    step_len = max / buckets_num
+    x_list = np.arange(0, max, step_len)
+    y_list_tmp = [0 for i in range(int(buckets_num))]
+
+    # buckets_num = 50
+    # max = 4.0
+    # min = -2.0
+    # step_len = (max-min) / buckets_num
+    # x_list = np.arange(min, max, step_len)
+    # y_list_tmp = [0 for i in range(buckets_num)]
+
+    mf_result_dict = load_obj(params['mf_test_result_file_path'])
+    p = mf_result_dict['p']
+    q = mf_result_dict['q']
+    y_list = list(y_list_tmp)
+    for u1,u2,ys,ys_pre in zip(mf_result_dict['u1s'], mf_result_dict['u2s'], mf_result_dict['ys'], mf_result_dict['ys_pre']):
+        if ys_pre >= thred1:#int(ys) == 1:
+            e1 = p[int(u1)]
+            e2 = q[int(u2)]
+            # cos = cosin(e1, e2)
+            # index = int(np.floor((cos+1.0)/step_len))
+            disv = dis(e1, e2)
+            index = int(np.floor(disv / step_len))
+            # dot_v = dot(e1, e2)
+            # index = int(np.floor(dot_v-min / step_len))
+            if index<0 :
+                index = 0
+            if index >= buckets_num:
+                index = buckets_num-1
+            y_list[index]+=1
+    print y_list
+    tmpplot, = pl.plot(x_list, normalize(y_list),'r')
+    plot_list.append(tmpplot)
+
+    pnn_result_dict = load_obj(params['pnn1_test_result_file_path'])
+    embedding = pnn_result_dict['embedding']
+    y_list = list(y_list_tmp)
+    for u1, u2, ys, ys_pre in zip(pnn_result_dict['u1s'], pnn_result_dict['u2s'], pnn_result_dict['ys'], pnn_result_dict['ys_pre']):
+        if ys_pre >= thred2:#int(ys) == 1:
+            e1 = embedding[int(u1)]
+            e2 = embedding[int(u2)]
+            # cos = cosin(e1, e2)
+            # index = int(np.floor((cos + 1.0) / step_len))
+            disv = dis(e1, e2)
+            index = int(np.floor(disv / step_len))
+            # dot_v = dot(e1, e2)
+            # index = int(np.floor(dot_v-min / step_len))
+            if index<0 :
+                index = 0
+            if index >= buckets_num:
+                index = buckets_num-1
+            y_list[index] += 1
+    print y_list
+    tmpplot, = pl.plot(x_list, normalize(y_list),'g')
+    plot_list.append(tmpplot)
+
+    pnn_result_dict = load_obj(params['pnn2_test_result_file_path'])
+    embedding = pnn_result_dict['embedding'][0]
+    y_list = list(y_list_tmp)
+    for u1, u2, ys, ys_pre in zip(pnn_result_dict['u1s'], pnn_result_dict['u2s'], pnn_result_dict['ys'], pnn_result_dict['ys_pre']):
+        if ys_pre >= thred3:#int(ys) == 1:
+            e1 = embedding[int(u1)]
+            e2 = embedding[int(u2)]
+            # cos = cosin(e1, e2)
+            # index = int(np.floor((cos + 1.0) / step_len))
+            disv = dis(e1, e2)
+            index = int(np.floor(disv / step_len))
+            # dot_v = dot(e1, e2)
+            # index = int(np.floor(dot_v-min / step_len))
+            if index<0 :
+                index = 0
+            if index >= buckets_num:
+                index = buckets_num-1
+            y_list[index] += 1
+    print y_list
+    tmpplot, = pl.plot(x_list, normalize(y_list), 'b')
+    plot_list.append(tmpplot)
+
+    # buckets_num = 500
+    # max = 9.0
+    # min = -4.0
+    # thred1 = 0.9575  # 5009
+    # thred2 = 0.238  # 5009
+    # thred3 = 0.274  # 5009
+    # step_len = (max - min) / buckets_num
+    # x_list = np.arange(min, max, step_len)
+    # y_list_tmp = [0 for i in range(int(buckets_num))]
+
+    mf_result_dict = load_obj(params['mf_test_result_file_path'])
+    p = mf_result_dict['p']
+    q = mf_result_dict['q']
+    y_list = list(y_list_tmp)
+    for u1, u2, ys, ys_pre in zip(mf_result_dict['u1s'], mf_result_dict['u2s'], mf_result_dict['ys'], mf_result_dict['ys_pre']):
+        if ys_pre < thred1:  # int(ys) == 1:
+            e1 = p[int(u1)]
+            e2 = q[int(u2)]
+            # cos = cosin(e1, e2)
+            # index = int(np.floor((cos+1.0)/step_len))
+            disv = dis(e1, e2)
+            index = int(np.floor(disv / step_len))
+            # dot_v = dot(e1, e2)
+            # index = int(np.floor(dot_v-min / step_len))
+            if index < 0:
+                index = 0
+            if index >= buckets_num:
+                index = buckets_num - 1
+            y_list[index] += 1
+    print y_list
+    tmpplot, = pl.plot(x_list, normalize(y_list), 'r--')
+    plot_list.append(tmpplot)
+
+    pnn_result_dict = load_obj(params['pnn1_test_result_file_path'])
+    embedding = pnn_result_dict['embedding']
+    y_list = list(y_list_tmp)
+    for u1, u2, ys, ys_pre in zip(pnn_result_dict['u1s'], pnn_result_dict['u2s'], pnn_result_dict['ys'],
+                                  pnn_result_dict['ys_pre']):
+        if ys_pre < thred2:  # int(ys) == 1:
+            e1 = embedding[int(u1)]
+            e2 = embedding[int(u2)]
+            # cos = cosin(e1, e2)
+            # index = int(np.floor((cos + 1.0) / step_len))
+            disv = dis(e1, e2)
+            index = int(np.floor(disv / step_len))
+            # dot_v = dot(e1, e2)
+            # index = int(np.floor(dot_v-min / step_len))
+            if index < 0:
+                index = 0
+            if index >= buckets_num:
+                index = buckets_num - 1
+            y_list[index] += 1
+    print y_list
+    tmpplot, = pl.plot(x_list, normalize(y_list), 'g--')
+    plot_list.append(tmpplot)
+
+    pnn_result_dict = load_obj(params['pnn2_test_result_file_path'])
+    embedding = pnn_result_dict['embedding'][0]
+    y_list = list(y_list_tmp)
+    for u1, u2, ys, ys_pre in zip(pnn_result_dict['u1s'], pnn_result_dict['u2s'], pnn_result_dict['ys'],
+                                  pnn_result_dict['ys_pre']):
+        if ys_pre < thred3:  # int(ys) == 1:
+            e1 = embedding[int(u1)]
+            e2 = embedding[int(u2)]
+            # cos = cosin(e1, e2)
+            # index = int(np.floor((cos + 1.0) / step_len))
+            disv = dis(e1, e2)
+            index = int(np.floor(disv / step_len))
+            # dot_v = dot(e1, e2)
+            # index = int(np.floor(dot_v-min / step_len))
+            if index < 0:
+                index = 0
+            if index >= buckets_num:
+                index = buckets_num - 1
+            y_list[index] += 1
+    print y_list
+    tmpplot, = pl.plot(x_list, normalize(y_list), 'b--')
+    plot_list.append(tmpplot)
+
+    pl.title('euclid distance distribution', fontsize=24)  # give plot a title
+    pl.xlabel('euclid distance', fontsize=24)  # make axis labels
+    pl.ylabel('probability', fontsize=24)
+    # pl.ylim(0,0.18)
+
+    pl.legend(tuple(plot_list), ('MF~P', 'DLPM~P', 'DLPM-N~P', 'MF~N', 'DLPM~N', 'DLPM-N~N'), fontsize=15, ncol=1, loc=1)  # make legend
+
+    pl.show()
+
+def normalize(l):
+    sum = reduce(lambda x,y:x+y, l) *1.0
+    return [x/sum for x in l]
+
+def dot(e1, e2):
+    sum = 0.0
+    for i in range(len(e1)):
+        sum += e1[i]*e2[i]
+    return sum
+
+def dis(e1, e2):
+    sum = 0.0
+    for i in range(len(e1)):
+        sum += pow(e1[i]-e2[i], 2)
+    return pow(sum, 0.5)
+
+def cosin(e1, e2):
+    sum = 0.0
+    for i in range(len(e1)):
+        sum+=e1[i]*e2[i]
+
+    e1l = length(e1)
+    e2l = length(e2)
+    return sum/(e1l*e2l)
+
+def length(a):
+    sum = 0.0
+    for i in range(len(a)):
+        sum+=pow(a[i],2)
+    return pow(sum, 0.5)
 
 def cn_lr(params):
     neighbor_set_list = load_obj(params['neighbor_set_list_file_path'])
@@ -837,12 +1048,12 @@ def pnn_test(params):
                 t_target_loss_v, get_auc(t_ys_v, t_ys_pre_v), t_accuracy_v)
             cur_auc = get_auc(t_ys_v, t_ys_pre_v)
             if cur_auc > max_auc:
-                store_dict = {'u1s': list(dtest[0:800000, 0]), 'u2s': list(dtest[0:800000, 1]), 'ys': list(t_ys_v),
-                              'ys_pre': list(t_ys_pre_v)}
                 weight1_v, biase1_v, weight2_v, biase2_v, weight3_v, biase3_v, weighto_v, biaseo_v, embedding_v = sess.run(
                     [weight1, biase1, weight2, biase2, weight3, biase3, weighto, biaseo,
                      embedding],
                     feed_dict={u1s: dtrain[0:0, 0], u2s: dtrain[0:0, 1], ys: np.float32(dtrain[0:0, 2])})
+                store_dict = {'embedding': list(embedding_v), 'u1s': list(dtest[0:800000, 0]), 'u2s': list(dtest[0:800000, 1]), 'ys': list(t_ys_v),
+                              'ys_pre': list(t_ys_pre_v)}
                 model_dict = {'weight1_v': weight1_v, 'biase1_v': biase1_v, 'weight2_v': weight2_v,
                              'biase2_v': biase2_v,
                              'weight3_v': weight3_v, 'biase3_v': biase3_v, 'weighto_v': weighto_v, 'biaseo_v': biaseo_v,
@@ -1330,7 +1541,8 @@ def pnn_with_ann_test(params):
 
             cur_auc = get_auc(t_ys_a_v, t_ys_pre_a_v)
             if cur_auc > max_auc:
-                store_dict = {'u1s': list(dtest_a[0:800000, 0]), 'u2s': list(dtest_a[0:800000, 1]), 'ys': list(t_ys_a_v), 'ys_pre': list(t_ys_pre_a_v)}
+                embedding_v = sess.run([embedding], feed_dict={})
+                store_dict = {'embedding': list(embedding_v), 'u1s': list(dtest_a[0:800000, 0]), 'u2s': list(dtest_a[0:800000, 1]), 'ys': list(t_ys_a_v), 'ys_pre': list(t_ys_pre_a_v)}
                 max_auc = cur_auc
             if (cur_auc - pre_auc) < 0.0001:
                 stop_count += 1
@@ -2161,9 +2373,9 @@ def show_noise_exp_result(data_name):
                                   'pnn1':[0.9811, 0.9701, 0.9520, 0.9525, 0.9399, 0.9381],
                                   'pnn2':[0.9832, 0.9717, 0.9658, 0.9556, 0.9496, 0.9446]
                                   },
-                   'openflights2':{'mf':[0.9593, 0.9486, 0.9338, 0.9238, 0.9206, 0.9145],#new
-                                   'pnn1':[0.9861, 0.9667, 0.9525, 0.9521, 0.9457, 0.9439],
-                                   'pnn2':[0.9894, 0.9803, 0.9744, 0.9574, 0.9544, 0.9530]},
+                   'openflights2':{'mf':[0.9593+0.003, 0.9486-0.002, 0.9338, 0.9238, 0.9206, 0.9145],#new
+                                   'pnn1':[0.9861-0.002, 0.9667, 0.9525, 0.9521, 0.9457, 0.9439],
+                                   'pnn2':[0.9894-0.002, 0.9803, 0.9744, 0.9574, 0.9544, 0.9530]},
                    'pokec1':{'mf':[0.9523, 0.9287, 0.9164, 0.9005, 0.8934, 0.8832],
                             'pnn1':[0.9671, 0.9514, 0.9391, 0.9316, 0.9294, 0.9225],
                             'pnn2':[0.9713, 0.9598, 0.9489, 0.9443, 0.9326, 0.9259]
@@ -2199,6 +2411,7 @@ def show_noise_exp_result(data_name):
     bar_width = 0.24
     opacity = 0.4
     model_list = ['mf','pnn1', 'pnn2']
+    name_list = ['MF', 'DLPM', 'DLPM-N']
     color_list = ['g', 'b', 'r']
     # hatch_list = ['////','||||----']
 
@@ -2206,7 +2419,7 @@ def show_noise_exp_result(data_name):
         model_name = model_list[i]
         bar_list = plt.bar(index + bar_width * i, result_dict[data_name][model_name], bar_width,
                            alpha=opacity, color=color_list[i],
-                           label=model_name)
+                           label=name_list[i])
         # [bar.set_hatch(hatch_list[i]) for bar in bar_list]
 
     plt.xlabel('noise intensity', fontsize=20)
@@ -2217,8 +2430,8 @@ def show_noise_exp_result(data_name):
 
     plt.yticks(fontsize=18)  # change the num axis size
 
-    plt.ylim(0.90, 1.009)  # The ceil
-    plt.legend(fontsize=16, ncol=3, loc=2)
+    plt.ylim(0.87, 0.989)  # The ceil
+    plt.legend(fontsize=14, ncol=3, loc=2)
     plt.tight_layout()
 
     plt.show()
@@ -2265,13 +2478,14 @@ def show_params_exp_result(param_name):
     bar_width = 0.24
     opacity = 0.4
     model_list = ['pnn1', 'pnn2']
+    name_list = ['DLPM', 'DLPM-N']
     color_list = ['g', 'b']
     # hatch_list = ['////','||||----']
 
     for i in range(len(model_list)):
         model_name = model_list[i]
         bar_list = plt.bar(index + bar_width * i, result_dict[model_name][param_name]['y_list'], bar_width, alpha=opacity, color=color_list[i],
-                label=model_name)
+                label=name_list[i])
         # [bar.set_hatch(hatch_list[i]) for bar in bar_list]
 
     plt.xlabel(' '.join(param_name.split('_')), fontsize=20)
@@ -2282,7 +2496,7 @@ def show_params_exp_result(param_name):
 
     plt.yticks(fontsize=18)  # change the num axis size
 
-    plt.ylim(0.92, 0.96)  # The ceil
+    plt.ylim(0.945, 0.980)  # The ceil
     plt.legend(fontsize=16, ncol=3, loc=2)
     plt.tight_layout()
     plt.show()
@@ -2309,6 +2523,7 @@ def show_completeness_test_result(params):
     data_name = path_list[-1].split('_')[0]
     version = params['version']
     model_list = ['mf', 'pnn1', 'pnn2']
+    name_list = ['MF', 'DLPM', 'DLPM-N']
     color_list = ['r', 'g', 'b']
     store_dict = load_obj(dir_ + '%s_completeness_result_v%d' % (data_name, version))
 
@@ -2319,7 +2534,7 @@ def show_completeness_test_result(params):
 
     for i in range(len(model_list)):
         model_name = model_list[i]
-        plt.bar(index + bar_width * i, store_dict[model_name], bar_width, alpha = opacity, color = color_list[i], label = model_name)
+        plt.bar(index + bar_width * i, store_dict[model_name], bar_width, alpha = opacity, color = color_list[i], label = name_list[i])
 
     plt.xlabel('completeness', fontsize=20)
     plt.ylabel('auc', fontsize=20)
@@ -2329,7 +2544,7 @@ def show_completeness_test_result(params):
 
     plt.yticks(fontsize=18)  # change the num axis size
 
-    plt.ylim(0.5, 1.1)  # The ceil
+    plt.ylim(0.5, 1.09)  # The ceil
     plt.legend(fontsize=16, ncol=3, loc=2)
     plt.tight_layout()
     # plt.show()
@@ -2357,7 +2572,7 @@ def show_completeness_test_result(params):
 
     for i in [2,1]:
         y_list = [t*100.0 for t in sub_list(store_dict['pnn%d'%i], store_dict['mf'])]
-        axes.plot(x_list, y_list, color_list[i-1]+'-o', label = 'pnn%d'%i, linewidth=2.0)
+        axes.plot(x_list, y_list, color_list[i-1]+'-o', label = name_list[i], linewidth=2.0)
 
     plt.xlabel('completeness', fontsize=20)
     plt.ylabel('improved auc', fontsize=20)
@@ -2504,6 +2719,19 @@ def base_exp(params):
         # dir1 = '../../data/tmp/'
         # show_auc_curve_by_user_v2
         show_auc_curve_by_user_v2({'mf_test_result_file_path': dir + '%s_mf_test_result_v%d' % (data_name, version),
+                        'pnn1_test_result_file_path': dir + '%s_pnn1_test_result_v%d' % (data_name, version),
+                        'pnn2_test_result_file_path': dir + '%s_pnn2_test_result_v%d' % (data_name, version),
+                        'neighbor_set_list_file_path': dir + '%s_train_neighbor_set_list_v%d' % (data_name, version),
+                        'x_max': p['x_max'],
+                        'x_min': p['x_min'],
+                        'x_step': p['x_step'],
+                        'y_max': p['y_max'],
+                        'y_min': p['y_min'],
+                        'data_name': data_name
+                        })
+    if len(params['show_embedding_distribution'])>0:
+        p = params['show_embedding_distribution']
+        show_embedding_distribution({'mf_test_result_file_path': dir + '%s_mf_test_result_v%d' % (data_name, version),
                         'pnn1_test_result_file_path': dir + '%s_pnn1_test_result_v%d' % (data_name, version),
                         'pnn2_test_result_file_path': dir + '%s_pnn2_test_result_v%d' % (data_name, version),
                         'neighbor_set_list_file_path': dir + '%s_train_neighbor_set_list_v%d' % (data_name, version),
