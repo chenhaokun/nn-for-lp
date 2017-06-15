@@ -5,7 +5,7 @@ import time
 
 if __name__ == '__main__':
 
-    divide_data_e2e({'source_file_path': '../../data/openflights_data',
+    divide_data_e2e({'source_file_path': '../data/openflights_data',
                      'version': 1,
                      'tt_rate': 4,
                      'train_np_rate': 20,
@@ -18,7 +18,7 @@ if __name__ == '__main__':
                      'get_hop2_data': True,
                      'random_p': False})
     
-    base_exp({'source_file_path': '../../data/openflights_data',
+    base_exp({'source_file_path': '../data/openflights_data',
               'version': 1,
               'train_np_rate': 20,
               'baseline_set': set(['cn','aa','ra','katz','rwr','mf']),

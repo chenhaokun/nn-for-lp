@@ -762,7 +762,7 @@ def base_exp(params):
                          'dtest_file_path': dir + '%s_test_data_v%d' % (data_name, version),
                          'embedding_size': 20, 'node_num': node_num, 'train_np_rate': params['train_np_rate'],
                          'batch_size': 5000, 'round': 25, 'learning_rate': 5e-3, 'beta': 4e-1,
-                         'store_test_result': params['store_test_result'],
+                         'store_test_result': False,
                          'mf_test_result_file_path': dir + '%s_mf_test_result_v%d' % (data_name, version)})
 
     if len(params['pnn1'])>0:
@@ -778,7 +778,7 @@ def base_exp(params):
              'embedding_size': 20, 'node_num': node_num,
              'h1_size': 20, 'h2_size': 20, 'h3_size': 20, 'h4_size': 20,
              'round': p['round'], 'learning_rate': lr, 'beta': bt, 'batch_size': 3000, #'learning_rate': 4e-3, 'beta': 4e-4, 'batch_size': 5000,
-             'store_test_result': params['store_test_result'],
+             'store_test_result': False,
              'pnn1_test_result_file_path': dir + '%s_pnn1_test_result_v%d' % (data_name, version)})
 
     if len(params['pnn2'])>0:
@@ -791,6 +791,6 @@ def base_exp(params):
                            'h1_size': 20, 'h2_size': 20, 'h3_size': 20, 'h4_size': 20,
                            'batch_size': 5000, 'round': p['round'], 'learning_rate1': p['learning_rate1'], 'learning_rate2': p['learning_rate2'], 'beta1': p['beta1'], 'beta2': p['beta2'],
                            'hop2_np_rate': p['hop2_np_rate'],
-                           'store_test_result': params['store_test_result'],
+                           'store_test_result': False,
                            'pnn2_test_result_file_path': dir + '%s_pnn2_test_result_v%d' % (data_name, version)
                            })
