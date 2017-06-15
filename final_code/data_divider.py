@@ -48,89 +48,6 @@ def randomly_divide_data(source_file_path, target_file_path_list, weight_list):
 
     print('randomly_divide_data completed\n')
 
-def add_noise(source_file_path, target_file_path, except_file_path, node_num, ns_rate):
-    print('starting add_noise')
-
-    result_list = []
-    with open(source_file_path, 'r') as source_file, open(except_file_path, 'r') as except_file:
-        edge_set = set()
-        except_set = set()
-        for line in source_file:
-            edge_set.add(line)
-        for line in except_file:
-            except_set.add(line)
-        target_num = int((1 + ns_rate) * len(edge_set))
-        while target_num > len(edge_set):
-            a = random.randint(1, node_num)
-            b = random.randint(1, node_num)
-            newline = '%d\t%d\n'%(a,b)
-            if a != b and newline not in edge_set and newline not in except_set:
-                edge_set.add(newline)
-
-        result_list = [line for line in edge_set]
-
-    with open(target_file_path, 'w') as target_file:
-        target_file.writelines(result_list)
-        print('noise file line count: %d'%len(result_list))
-
-    print('add_noise completed\n')
-
-def randomly_divide_data_with_accumulation(source_file_path, target_file_path_list, weight_list):
-    print('starting randomly_divide_data_with_accumulation')
-
-    with open(source_file_path, 'r') as source_file:
-        source_list = source_file.readlines()
-        random.shuffle(source_list)
-        line_num = len(source_list)
-
-        sum = 0
-        for weight in weight_list:
-            sum += weight
-
-        thredhold_list = [0]
-        slide_sum = 0
-        for weight in weight_list:
-            slide_sum += weight
-            thredhold_list.append(int(float(slide_sum) / sum * line_num))
-
-        for i in range(len(target_file_path_list)):
-            with open(target_file_path_list[i], 'w') as target_file:
-                if i == (len(weight_list)-1):
-                    target_file.writelines(source_list[thredhold_list[i]:thredhold_list[i + 1]])
-                else:
-                    target_file.writelines(source_list[thredhold_list[0]:thredhold_list[i+1]])
-                print('\tfile%d adding positive edge count: %d'%(i, thredhold_list[i+1]-thredhold_list[i]))
-
-    print('randomly_divide_data_with_accumulation completed\n')
-
-def randomly_divide_data_with_accumulation_v2(source_file_path, target_file_path_list, weight_list):
-    print('starting randomly_divide_data_with_accumulation')
-
-    with open(source_file_path, 'r') as source_file:
-        source_list = source_file.readlines()
-        random.shuffle(source_list)
-        line_num = len(source_list)
-
-        sum = 0
-        for weight in weight_list:
-            sum += weight
-
-        thredhold_list = [0]
-        slide_sum = 0
-        for weight in weight_list:
-            slide_sum += weight
-            thredhold_list.append(int(float(slide_sum) / sum * line_num))
-
-        for i in range(len(target_file_path_list)):
-            with open(target_file_path_list[i], 'w') as target_file:
-                if i == (len(weight_list)-1):
-                    target_file.writelines(source_list[thredhold_list[i]:thredhold_list[i + 1]])
-                else:
-                    target_file.writelines(source_list[thredhold_list[0]:thredhold_list[i+1]])
-                print('\tfile%d adding positive edge count: %d'%(i, thredhold_list[i+1]-thredhold_list[i]))
-
-    print('randomly_divide_data_with_accumulation completed\n')
-
 def sample_negative_data(source_file_path, target_file_path, np_rate, node_num, except_list):
     print('starting sample_negative_data')
 
@@ -238,18 +155,8 @@ def get_hop2_link(source_file_path, target_file_path, neighbor_set_list_file_pat
         print 'no neighbor set list file exits'
         return
 
-    # friends_dict = {}
     result_set = set()
     result_list = []
-
-    # with open(source_file_path, 'r') as source_file:
-    #     for line in source_file:
-    #         items=line[0:-1].split('\t')
-    #         if items[0] not in friends_dict:
-    #             friends_dict[items[0]] = []
-    #             friends_dict[items[0]].append(items[1])
-    #         else:
-    #             friends_dict[items[0]].append(items[1])
 
     with open(source_file_path, 'r') as source_file, open(target_file_path, 'w') as target_file:
         if random_p:
@@ -304,37 +211,6 @@ def get_tdata_with_lable(positive_data_file_path, negative_data_file_path, targe
 
     print('get_tdata_with_lable completed\n')
 
-def tsv_to_csv(source_file_path, target_file_path):
-    print('starting tsv_to_csv')
-
-    with open(source_file_path,'r') as source_file, open(target_file_path,'w') as target_file:
-        source_list = source_file.readlines()
-        target_list = [','.join(line.split('\t')) for line in source_list]
-        target_file.writelines(target_list)
-
-    print('tsv_to_csv completed\n')
-
-def to_tsv(source_file_path, target_file_path):
-    result_list = []
-    with open(source_file_path, 'r') as source_file:
-        for line in source_file:
-            newline = line[0:-2].replace(' ', '\t') + '\n'
-            result_list.append(newline)
-    with open(target_file_path, 'w') as target_file:
-        target_file.writelines(result_list)
-
-def gen_random_data(target_file_path, edge_num, node_num):
-    with open(target_file_path, 'w') as target_file:
-        edge_set = set()
-        while(len(edge_set)<edge_num):
-            i = random.randint(1, node_num)
-            j = random.randint(1, node_num)
-            line = '%d\t%d\n' % (i, j)
-            if i != j and line not in edge_set:
-                edge_set.add(line)
-        result_list = [line for line in edge_set]
-        target_file.writelines(result_list)
-
 def store_obj(obj,file_path):
     with open(file_path,'wb') as f:
         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
@@ -356,6 +232,7 @@ def divide_data_e2e(params):
                              [dir + '%s_train_positive_data_v%d' % (data_name, version),
                               dir + '%s_test_positive_data_v%d' % (data_name, version)],
                              [params['tt_rate'], 1])
+
     if params['new_tt_data']:
         sample_negative_data(dir + '%s_train_positive_data_v%d' % (data_name, version),
                              dir + '%s_train_negative_data_v%d' % (data_name, version),
@@ -385,7 +262,7 @@ def divide_data_e2e(params):
                          dir + '%s_train_katz_matrix_v%d' % (data_name, version),
                          node_num,
                          0.1,
-                         params['exact_katz'])
+                         True)
 
     if params['get_rwr_matrix']:
         get_rwr_matrix(dir + '%s_train_positive_data_v%d' % (data_name, version),
@@ -393,38 +270,10 @@ def divide_data_e2e(params):
                        dir + '%s_train_rwr_matrix_v%d' % (data_name, version),
                        node_num,
                        0.99,
-                       params['exact_rwr'])
+                       True)
 
     if params['get_hop2_data']:
         get_hop2_link(dir + '%s_train_positive_data_v%d' % (data_name, version),
                       dir + '%s_hop2_train_positive_data_v%d' % (data_name, version),
                       dir + '%s_train_neighbor_set_list_v%d' % (data_name, version),
-                      params['random_p'], 2)#attention
-        # sample_negative_data(dir + '%s_hop2_train_positive_data_v%d' % (data_name, version),
-        #                      dir + '%s_hop2_train_negative_data_v%d' % (data_name, version),
-        #                      params['hop2_np_rate'],
-        #                      node_num,
-        #                      [])
-        # get_tdata_with_lable(dir + '%s_hop2_train_positive_data_v%d' % (data_name, version),
-        #                      dir + '%s_hop2_train_negative_data_v%d' % (data_name, version),
-        #                      dir + '%s_hop2_train_data_v%d' % (data_name, version))
-
-if __name__ == '__main__':
-    # gen_random_data('../../data/test1/random_data', 50000, 5000)
-
-    # divide_data_e2e({'source_file_path': '../../data/test1/openflights_data',
-    #                  'version': 1,
-    #                  'tt_rate': 4,
-    #                  'train_np_rate': 160,
-    #                  'test_np_rate': 160,
-    #                  'new_divide': True,
-    #                  'new_tt_data': True,
-    #                  'get_neighbor_set': True,
-    #                  'get_katz_matrix': True,
-    #                  'exact_katz': True,
-    #                  'get_rwr_matrix': True,
-    #                  'exact_rwr': True,
-    #                  'get_hop2_data': True,
-    #                  'random_p': False,
-    #                  })
-    print()
+                      False, 2)
