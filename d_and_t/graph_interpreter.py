@@ -356,12 +356,13 @@ def show_auc_curve_by_user(params):
 
 def show_auc_curve_by_user_v2(params):
     neighbor_set_list = load_obj(params['neighbor_set_list_file_path'])
-    points = (params['x_max'] - params['x_min'])/params['x_step']
     x_list = range(params['x_min']+params['x_step']-1, params['x_max'], params['x_step'])
-    m_list = ['pnn2', 'pnn1', 'mf']#['pnn2', 'pnn1', 'mf']
-    name_list = ['DLPM', 'DLPM-N', 'mf']
+    m_list = ['pnn2', 'pnn1', 'mf']
     plot_list = []
-    color_list = ['b-*', 'g-o', 'r-^']
+    color_list = ['b-D', 'g-o', 'r-^']
+
+    # pl.figure()
+    # pl.style.use('classic')
 
     alist=[]
     for j in range(len(m_list)):
@@ -391,33 +392,46 @@ def show_auc_curve_by_user_v2(params):
             print '%d - %.4f (%d)'%(l,auc,len(aucs))
             auc_list.append(auc)
 
-        tmpplot, = pl.plot(x_list, auc_list, color_list[j], linewidth=2.0)
+        tmpplot, = pl.plot(x_list, auc_list, color_list[j], linewidth=2.0, markersize=10)
         plot_list.append(tmpplot)
         alist.append(auc_list)
 
-    pl.title('cold start auc curve in %s'%'pokec', fontsize=24)  # give plot a title
-    pl.xlabel('max node degree', fontsize=24)  # make axis labels
-    pl.ylabel('auc', fontsize=24)
+    pl.title('Openflights Dataset', fontsize=24)  # give plot a title
+    pl.xlabel('Max Node Degree', fontsize=22)  # make axis labels
+    pl.ylabel('AUC', fontsize=22)
 
-    # pl.xlim(1, 10)  # set axis limits
-    pl.ylim(params['y_min'], params['y_max'])
-    pl.tick_params(labelsize=20)
+    pl.xlim(2, 22)  # set axis limits
+    # pl.ylim(params['y_min'], params['y_max'])
+    pl.xticks(np.arange(5, 21, 5), fontsize=18)
+    pl.yticks(np.arange(0.80, 0.99, 0.05), fontsize=18)
+    pl.tick_params(labelsize=18)
 
-    pl.legend(tuple(plot_list), ('DLPM-N', 'DLPM', 'mf'), fontsize=20, ncol=1, loc=4)  # make legend
-    figure=pl.figure()
-    axes = figure.add_subplot(111)
+    pl.legend(tuple(plot_list), ('DLP-A', 'DLP', 'MF'), fontsize=18, ncol=1, loc=4)  # make legend
+    pl.grid()
+    pl.tight_layout()
 
-    pl.plot(x_list, map(lambda x:(alist[0][x]-alist[1][x])*100,range(len(alist[0]))), 'r-o', linewidth=2.0)
-    pl.title('improved auc comparing DLPM-N to DLPM', fontsize=20)  # give plot a title
-    pl.xlabel('max node degree', fontsize=24)  # make axis labels
-    pl.ylabel('improved auc', fontsize=24)
-    pl.tick_params(labelsize=20)
+    # figure=pl.figure()
+    # pl.style.use('classic')
+    # axes = figure.add_subplot(111)
+    #
+    # ptmp, = pl.plot(x_list, map(lambda x:(alist[0][x]-alist[1][x])*100,range(len(alist[0]))), 'r-o', linewidth=2.0, markersize=10)
+    # pl.title('Pokec Dataset', fontsize=24)  # give plot a title
+    # pl.xlabel('Max Node Degree', fontsize=22)  # make axis labels
+    # pl.ylabel('Improvement (AUC)', fontsize=22)
+    # pl.xlim(2,22)
+    # pl.xticks(np.arange(5,21,5))
+    # pl.yticks(np.arange(1.0,5.1,1.0))
+    # pl.tick_params(labelsize=18)
+    #
+    # fmt = '%.2f%%'
+    # yticks = mtick.FormatStrFormatter(fmt)
+    # axes.yaxis.set_major_formatter(yticks)
+    # pl.legend(tuple([ptmp]), ('Improvement (AUC)\n(DLP-A ~ DLP)',''), fontsize=18, ncol=1, loc=1)
+    # # plt.xticks(fontsize=20)
+    # # plt.yticks(fontsize=20)
+    # pl.grid()
+    # pl.tight_layout()
 
-    fmt = '%.1f%%'
-    yticks = mtick.FormatStrFormatter(fmt)
-    axes.yaxis.set_major_formatter(yticks)
-    # plt.xticks(fontsize=20)
-    # plt.yticks(fontsize=20)
     pl.show()  # show the plot on the screen
 
 def show_embedding_distribution(params):
@@ -596,6 +610,604 @@ def show_embedding_distribution(params):
     # pl.ylim(0,0.18)
 
     pl.legend(tuple(plot_list), ('MF~P', 'DLPM~P', 'DLPM-N~P', 'MF~N', 'DLPM~N', 'DLPM-N~N'), fontsize=15, ncol=1, loc=1)  # make legend
+
+    pl.show()
+
+def show_embedding_distribution_v2(params):
+    type=1#0:cosine,1:euclid,2:inner product
+    show_list = [0,2,3,4,6,7]#[2,3,6,7]#[0,1,4,5]
+
+    buckets_num = 0
+    max = 0.0
+    min = 0.0
+    step_len = 0
+    x_list = []
+    y_list_tmp = []
+
+    if type==0:
+        buckets_num = 50
+        max = 2.2
+        step_len = max / buckets_num
+        x_list = np.arange(0, max, step_len)
+        y_list_tmp = [0 for i in range(int(buckets_num))]
+
+    if type==1:
+        buckets_num = 50
+        step_len = 2.0/buckets_num
+        x_list = np.arange(-1, 1, step_len)
+        y_list_tmp = [0 for i in range(int(buckets_num))]
+
+    if type==2:
+        buckets_num = 50
+        max = 2.0
+        min = -2.0
+        step_len = (max-min) / buckets_num
+        x_list = np.arange(min, max, step_len)
+        y_list_tmp = [0 for i in range(buckets_num)]
+
+    plot_list = []
+
+    one_hop_p = set()
+    two_hop_p = set()
+    one_hop_n = set()
+    two_hop_n = set()
+    with open(params['one_hop_plinks_file_path'], 'r') as one_hop_plinks_file, open(params['two_hop_plinks_file_path'], 'r') as two_hop_plinks_file:
+        for line in one_hop_plinks_file:
+            items = line[0:-1].split('\t')
+            a = int(items[0]) - 1
+            b = int(items[1]) - 1
+            newline = '%d\t%d\n'%(a,b)
+            one_hop_p.add(newline)
+
+        for line in two_hop_plinks_file:
+            items = line[0:-1].split('\t')
+            a = int(items[0]) - 1
+            b = int(items[1]) - 1
+            newline = '%d\t%d\n' % (a, b)
+            two_hop_p.add(newline)
+
+        while len(one_hop_n) < len(one_hop_p):
+            a = random.randint(0, params['node_num']-1)
+            b = random.randint(0, params['node_num']-1)
+            newline = '%d\t%d\n'%(a,b)
+            if a!=b and newline not in one_hop_p and newline not in one_hop_n:
+                one_hop_n.add(newline)
+
+        while len(two_hop_n) < len(two_hop_p):
+            a = random.randint(0, params['node_num']-1)
+            b = random.randint(0, params['node_num']-1)
+            newline = '%d\t%d\n'%(a,b)
+            if a!=b and newline not in two_hop_p and newline not in two_hop_n:
+                two_hop_n.add(newline)
+
+    pnn_result_dict = load_obj(params['pnn1_test_result_file_path'])
+    embedding = pnn_result_dict['embedding']
+
+    datas=[]
+    if 0 in show_list:
+        data=[]
+        y_list = list(y_list_tmp)
+        for line in one_hop_p:
+            items = line[0:-1].split('\t')
+            e1 = embedding[int(items[0])]
+            e2 = embedding[int(items[1])]
+            index=0
+            if type==0:
+                cos = cosin(e1, e2)
+                index = int(np.floor((cos+1.0)/step_len))
+            if type == 1:
+                disv = dis(e1, e2)
+                index = int(np.floor(disv / step_len))
+                data.append(disv)
+            if type==2:
+                dot_v = dot(e1, e2)
+                index = int(np.floor((dot_v-min) / step_len))
+            if index < 0:
+                index = 0
+            if index >= buckets_num:
+                index = buckets_num - 1
+            y_list[index] += 1
+        print y_list
+        datas.append(data)
+        tmpplot, = pl.plot(x_list, normalize(y_list),'r')
+        plot_list.append(tmpplot)
+
+
+
+    if 1 in show_list:
+        y_list = list(y_list_tmp)
+        data = []
+        for line in one_hop_n:
+            items = line[0:-1].split('\t')
+            e1 = embedding[int(items[0])]
+            e2 = embedding[int(items[1])]
+            index=0
+            if type==0:
+                cos = cosin(e1, e2)
+                index = int(np.floor((cos+1.0)/step_len))
+            if type == 1:
+                disv = dis(e1, e2)
+                index = int(np.floor(disv / step_len))
+                data.append(disv)
+            if type==2:
+                dot_v = dot(e1, e2)
+                index = int(np.floor((dot_v-min) / step_len))
+            if index < 0:
+                index = 0
+            if index >= buckets_num:
+                index = buckets_num - 1
+            y_list[index] += 1
+        print y_list
+        datas.append(data)
+        tmpplot, = pl.plot(x_list, normalize(y_list), 'r--')
+        plot_list.append(tmpplot)
+
+    if 2 in show_list:
+        data = []
+        y_list = list(y_list_tmp)
+        for line in two_hop_p:
+            items = line[0:-1].split('\t')
+            e1 = embedding[int(items[0])]
+            e2 = embedding[int(items[1])]
+            index = 0
+            if type == 0:
+                cos = cosin(e1, e2)
+                index = int(np.floor((cos + 1.0) / step_len))
+            if type == 1:
+                disv = dis(e1, e2)
+                index = int(np.floor(disv / step_len))
+                data.append(disv)
+            if type == 2:
+                dot_v = dot(e1, e2)
+                index = int(np.floor((dot_v - min) / step_len))
+            if index < 0:
+                index = 0
+            if index >= buckets_num:
+                index = buckets_num - 1
+            y_list[index] += 1
+        print y_list
+        datas.append(data)
+        tmpplot, = pl.plot(x_list, normalize(y_list), 'g')
+        plot_list.append(tmpplot)
+
+    if 3 in show_list:
+        data = []
+        y_list = list(y_list_tmp)
+        for line in two_hop_n:
+            items = line[0:-1].split('\t')
+            e1 = embedding[int(items[0])]
+            e2 = embedding[int(items[1])]
+            index = 0
+            if type == 0:
+                cos = cosin(e1, e2)
+                index = int(np.floor((cos + 1.0) / step_len))
+            if type == 1:
+                disv = dis(e1, e2)
+                index = int(np.floor(disv / step_len))
+                data.append(disv)
+            if type == 2:
+                dot_v = dot(e1, e2)
+                index = int(np.floor((dot_v - min) / step_len))
+            if index < 0:
+                index = 0
+            if index >= buckets_num:
+                index = buckets_num - 1
+            y_list[index] += 1
+        print y_list
+        datas.append(data)
+        tmpplot, = pl.plot(x_list, normalize(y_list), 'g--')
+        plot_list.append(tmpplot)
+
+    ####################
+
+    pnn_result_dict = load_obj(params['pnn2_test_result_file_path'])
+    embedding = pnn_result_dict['embedding'][0]
+
+    if 4 in show_list:
+        data = []
+        y_list = list(y_list_tmp)
+        for line in one_hop_p:
+            items = line[0:-1].split('\t')
+            e1 = embedding[int(items[0])]
+            e2 = embedding[int(items[1])]
+            index=0
+            if type==0:
+                cos = cosin(e1, e2)
+                index = int(np.floor((cos+1.0)/step_len))
+            if type == 1:
+                disv = dis(e1, e2)
+                index = int(np.floor(disv / step_len))
+                data.append(disv)
+            if type==2:
+                dot_v = dot(e1, e2)
+                index = int(np.floor((dot_v-min) / step_len))
+            if index < 0:
+                index = 0
+            if index >= buckets_num:
+                index = buckets_num - 1
+            y_list[index] += 1
+        print y_list
+        datas.append(data)
+        tmpplot, = pl.plot(x_list, normalize(y_list),'b')
+        plot_list.append(tmpplot)
+
+    if 5 in show_list:
+        data = []
+        y_list = list(y_list_tmp)
+        for line in one_hop_n:
+            items = line[0:-1].split('\t')
+            e1 = embedding[int(items[0])]
+            e2 = embedding[int(items[1])]
+            index=0
+            if type==0:
+                cos = cosin(e1, e2)
+                index = int(np.floor((cos+1.0)/step_len))
+            if type == 1:
+                disv = dis(e1, e2)
+                index = int(np.floor(disv / step_len))
+                data.append(disv)
+            if type==2:
+                dot_v = dot(e1, e2)
+                index = int(np.floor((dot_v-min) / step_len))
+            if index < 0:
+                index = 0
+            if index >= buckets_num:
+                index = buckets_num - 1
+            y_list[index] += 1
+        print y_list
+        datas.append(data)
+        tmpplot, = pl.plot(x_list, normalize(y_list), 'b--')
+        plot_list.append(tmpplot)
+
+    if 6 in show_list:
+        data = []
+        y_list = list(y_list_tmp)
+        for line in two_hop_p:
+            items = line[0:-1].split('\t')
+            e1 = embedding[int(items[0])]
+            e2 = embedding[int(items[1])]
+            index=0
+            if type==0:
+                cos = cosin(e1, e2)
+                index = int(np.floor((cos+1.0)/step_len))
+            if type == 1:
+                disv = dis(e1, e2)
+                index = int(np.floor(disv / step_len))
+                data.append(disv)
+            if type==2:
+                dot_v = dot(e1, e2)
+                index = int(np.floor((dot_v-min) / step_len))
+            if index < 0:
+                index = 0
+            if index >= buckets_num:
+                index = buckets_num - 1
+            y_list[index] += 1
+        print y_list
+        datas.append(data)
+        tmpplot, = pl.plot(x_list, normalize(y_list), 'y')
+        plot_list.append(tmpplot)
+
+    if 7 in show_list:
+        data = []
+        y_list = list(y_list_tmp)
+        for line in two_hop_n:
+            items = line[0:-1].split('\t')
+            e1 = embedding[int(items[0])]
+            e2 = embedding[int(items[1])]
+            index=0
+            if type==0:
+                cos = cosin(e1, e2)
+                index = int(np.floor((cos+1.0)/step_len))
+            if type == 1:
+                disv = dis(e1, e2)
+                index = int(np.floor(disv / step_len))
+                data.append(disv)
+            if type==2:
+                dot_v = dot(e1, e2)
+                index = int(np.floor((dot_v-min) / step_len))
+            if index < 0:
+                index = 0
+            if index >= buckets_num:
+                index = buckets_num - 1
+            y_list[index] += 1
+        print y_list
+        datas.append(data)
+        tmpplot, = pl.plot(x_list, normalize(y_list), 'y--')
+        plot_list.append(tmpplot)
+
+    pl.title('euclid distance distribution', fontsize=24)  # give plot a title
+    pl.xlabel('euclid distance', fontsize=24)  # make axis labels
+    pl.ylabel('probability', fontsize=24)
+    # pl.ylim(0,0.18)
+
+    pl.legend(tuple(plot_list), ('DLP ~ P', 'DLP ~ N', 'DLP-A ~ P', 'DLP-A ~ N'), fontsize=15, ncol=1, loc=1)  # make legend
+    pickle.dump(datas,open('distributions','w'))
+    pl.show()
+
+
+def show_embedding_distribution_v3(params):
+    type = 2  # 0:euclid,1:cosine,2:inner product
+    show_list = [0, 2, 3, 4, 6, 7]  # [2,3,6,7]#[0,1,4,5]
+
+    buckets_num = 0
+    max = 0.0
+    min = 0.0
+    step_len = 0
+    x_list = []
+    y_list_tmp = []
+
+    if type == 0:
+        buckets_num = 50
+        max = 2.2
+        step_len = max / buckets_num
+        x_list = np.arange(0, max, step_len)
+        y_list_tmp = [0 for i in range(int(buckets_num))]
+
+    if type == 1:
+        buckets_num = 50
+        step_len = 2.0 / buckets_num
+        x_list = np.arange(-1, 1, step_len)
+        y_list_tmp = [0 for i in range(int(buckets_num))]
+
+    if type == 2:
+        buckets_num = 50
+        max = 2.0
+        min = -2.0
+        step_len = (max - min) / buckets_num
+        x_list = np.arange(min, max, step_len)
+        y_list_tmp = [0 for i in range(buckets_num)]
+
+    plot_list = []
+
+    one_hop_p = set()
+    two_hop_p = set()
+    one_hop_n = set()
+    two_hop_n = set()
+    with open(params['one_hop_plinks_file_path'], 'r') as one_hop_plinks_file, open(params['two_hop_plinks_file_path'],
+                                                                                    'r') as two_hop_plinks_file:
+        for line in one_hop_plinks_file:
+            items = line[0:-1].split('\t')
+            a = int(items[0]) - 1
+            b = int(items[1]) - 1
+            newline = '%d\t%d\n' % (a, b)
+            one_hop_p.add(newline)
+
+        for line in two_hop_plinks_file:
+            items = line[0:-1].split('\t')
+            a = int(items[0]) - 1
+            b = int(items[1]) - 1
+            newline = '%d\t%d\n' % (a, b)
+            two_hop_p.add(newline)
+
+        while len(one_hop_n) < len(one_hop_p):
+            a = random.randint(0, params['node_num'] - 1)
+            b = random.randint(0, params['node_num'] - 1)
+            newline = '%d\t%d\n' % (a, b)
+            if a != b and newline not in one_hop_p and newline not in one_hop_n:
+                one_hop_n.add(newline)
+
+        while len(two_hop_n) < len(two_hop_p):
+            a = random.randint(0, params['node_num'] - 1)
+            b = random.randint(0, params['node_num'] - 1)
+            newline = '%d\t%d\n' % (a, b)
+            if a != b and newline not in two_hop_p and newline not in two_hop_n:
+                two_hop_n.add(newline)
+
+    pnn_result_dict = load_obj(params['pnn1_test_result_file_path'])
+    embedding = pnn_result_dict['embedding']
+
+    if 0 in show_list:
+        y_list = list(y_list_tmp)
+        for line in one_hop_p:
+            items = line[0:-1].split('\t')
+            e1 = embedding[int(items[0])]
+            e2 = embedding[int(items[1])]
+            index = 0
+            if type == 0:
+                cos = cosin(e1, e2)
+                index = int(np.floor((cos + 1.0) / step_len))
+            if type == 1:
+                disv = dis(e1, e2)
+                index = int(np.floor(disv / step_len))
+            if type == 2:
+                dot_v = dot(e1, e2)
+                index = int(np.floor((dot_v - min) / step_len))
+            if index < 0:
+                index = 0
+            if index >= buckets_num:
+                index = buckets_num - 1
+            y_list[index] += 1
+        print y_list
+        tmpplot, = pl.plot(x_list, normalize(y_list), 'r')
+        plot_list.append(tmpplot)
+
+    if 1 in show_list:
+        y_list = list(y_list_tmp)
+        for line in one_hop_n:
+            items = line[0:-1].split('\t')
+            e1 = embedding[int(items[0])]
+            e2 = embedding[int(items[1])]
+            index = 0
+            if type == 0:
+                cos = cosin(e1, e2)
+                index = int(np.floor((cos + 1.0) / step_len))
+            if type == 1:
+                disv = dis(e1, e2)
+                index = int(np.floor(disv / step_len))
+            if type == 2:
+                dot_v = dot(e1, e2)
+                index = int(np.floor((dot_v - min) / step_len))
+            if index < 0:
+                index = 0
+            if index >= buckets_num:
+                index = buckets_num - 1
+            y_list[index] += 1
+        print y_list
+        tmpplot, = pl.plot(x_list, normalize(y_list), 'r--')
+        plot_list.append(tmpplot)
+
+    if 2 in show_list:
+        y_list = list(y_list_tmp)
+        for line in two_hop_p:
+            items = line[0:-1].split('\t')
+            e1 = embedding[int(items[0])]
+            e2 = embedding[int(items[1])]
+            index = 0
+            if type == 0:
+                cos = cosin(e1, e2)
+                index = int(np.floor((cos + 1.0) / step_len))
+            if type == 1:
+                disv = dis(e1, e2)
+                index = int(np.floor(disv / step_len))
+            if type == 2:
+                dot_v = dot(e1, e2)
+                index = int(np.floor((dot_v - min) / step_len))
+            if index < 0:
+                index = 0
+            if index >= buckets_num:
+                index = buckets_num - 1
+            y_list[index] += 1
+        print y_list
+        tmpplot, = pl.plot(x_list, normalize(y_list), 'g')
+        plot_list.append(tmpplot)
+
+    if 3 in show_list:
+        y_list = list(y_list_tmp)
+        for line in two_hop_n:
+            items = line[0:-1].split('\t')
+            e1 = embedding[int(items[0])]
+            e2 = embedding[int(items[1])]
+            index = 0
+            if type == 0:
+                cos = cosin(e1, e2)
+                index = int(np.floor((cos + 1.0) / step_len))
+            if type == 1:
+                disv = dis(e1, e2)
+                index = int(np.floor(disv / step_len))
+            if type == 2:
+                dot_v = dot(e1, e2)
+                index = int(np.floor((dot_v - min) / step_len))
+            if index < 0:
+                index = 0
+            if index >= buckets_num:
+                index = buckets_num - 1
+            y_list[index] += 1
+        print y_list
+        tmpplot, = pl.plot(x_list, normalize(y_list), 'g--')
+        plot_list.append(tmpplot)
+
+    ####################
+
+    pnn_result_dict = load_obj(params['pnn2_test_result_file_path'])
+    embedding = pnn_result_dict['embedding'][0]
+
+    if 4 in show_list:
+        y_list = list(y_list_tmp)
+        for line in one_hop_p:
+            items = line[0:-1].split('\t')
+            e1 = embedding[int(items[0])]
+            e2 = embedding[int(items[1])]
+            index = 0
+            if type == 0:
+                cos = cosin(e1, e2)
+                index = int(np.floor((cos + 1.0) / step_len))
+            if type == 1:
+                disv = dis(e1, e2)
+                index = int(np.floor(disv / step_len))
+            if type == 2:
+                dot_v = dot(e1, e2)
+                index = int(np.floor((dot_v - min) / step_len))
+            if index < 0:
+                index = 0
+            if index >= buckets_num:
+                index = buckets_num - 1
+            y_list[index] += 1
+        print y_list
+        tmpplot, = pl.plot(x_list, normalize(y_list), 'b')
+        plot_list.append(tmpplot)
+
+    if 5 in show_list:
+        y_list = list(y_list_tmp)
+        for line in one_hop_n:
+            items = line[0:-1].split('\t')
+            e1 = embedding[int(items[0])]
+            e2 = embedding[int(items[1])]
+            index = 0
+            if type == 0:
+                cos = cosin(e1, e2)
+                index = int(np.floor((cos + 1.0) / step_len))
+            if type == 1:
+                disv = dis(e1, e2)
+                index = int(np.floor(disv / step_len))
+            if type == 2:
+                dot_v = dot(e1, e2)
+                index = int(np.floor((dot_v - min) / step_len))
+            if index < 0:
+                index = 0
+            if index >= buckets_num:
+                index = buckets_num - 1
+            y_list[index] += 1
+        print y_list
+        tmpplot, = pl.plot(x_list, normalize(y_list), 'b--')
+        plot_list.append(tmpplot)
+
+    if 6 in show_list:
+        y_list = list(y_list_tmp)
+        for line in two_hop_p:
+            items = line[0:-1].split('\t')
+            e1 = embedding[int(items[0])]
+            e2 = embedding[int(items[1])]
+            index = 0
+            if type == 0:
+                cos = cosin(e1, e2)
+                index = int(np.floor((cos + 1.0) / step_len))
+            if type == 1:
+                disv = dis(e1, e2)
+                index = int(np.floor(disv / step_len))
+            if type == 2:
+                dot_v = dot(e1, e2)
+                index = int(np.floor((dot_v - min) / step_len))
+            if index < 0:
+                index = 0
+            if index >= buckets_num:
+                index = buckets_num - 1
+            y_list[index] += 1
+        print y_list
+        tmpplot, = pl.plot(x_list, normalize(y_list), 'y')
+        plot_list.append(tmpplot)
+
+    if 7 in show_list:
+        y_list = list(y_list_tmp)
+        for line in two_hop_n:
+            items = line[0:-1].split('\t')
+            e1 = embedding[int(items[0])]
+            e2 = embedding[int(items[1])]
+            index = 0
+            if type == 0:
+                cos = cosin(e1, e2)
+                index = int(np.floor((cos + 1.0) / step_len))
+            if type == 1:
+                disv = dis(e1, e2)
+                index = int(np.floor(disv / step_len))
+            if type == 2:
+                dot_v = dot(e1, e2)
+                index = int(np.floor((dot_v - min) / step_len))
+            if index < 0:
+                index = 0
+            if index >= buckets_num:
+                index = buckets_num - 1
+            y_list[index] += 1
+        print y_list
+        tmpplot, = pl.plot(x_list, normalize(y_list), 'y--')
+        plot_list.append(tmpplot)
+
+    pl.title('euclid distance distribution', fontsize=24)  # give plot a title
+    pl.xlabel('euclid distance', fontsize=24)  # make axis labels
+    pl.ylabel('probability', fontsize=24)
+    # pl.ylim(0,0.18)
+
+    pl.legend(tuple(plot_list), ('DLP ~ P', 'DLP ~ N', 'DLP-A ~ P', 'DLP-A ~ N'), fontsize=15, ncol=1,
+              loc=1)  # make legend
 
     pl.show()
 
@@ -987,6 +1599,9 @@ def pnn_test(params):
         [tf.nn.l2_loss(weight1), tf.nn.l2_loss(weight2), tf.nn.l2_loss(weight3),
          tf.nn.l2_loss(weighto)])
 
+    weight_l2 = tf.reduce_sum(
+        [tf.nn.l2_loss(embedding)])
+
     target_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(ys_pre, ys))
     # target_loss = tf.reduce_mean(tf.nn.weighted_cross_entropy_with_logits(ys_pre, ys, 6))
     loss = target_loss + params['beta'] * weight_l2
@@ -1062,7 +1677,7 @@ def pnn_test(params):
             if (cur_auc - pre_auc) < 0.0001:
                 stop_count += 1
             pre_auc = cur_auc
-            if stop_count == 3 or i == (params['round'] - 1):
+            if stop_count == 50 or i == (params['round'] - 1):
                 if params['store_test_result']:
                     store_obj(store_dict, params['pnn1_test_result_file_path'])
                 break
@@ -1376,6 +1991,8 @@ def pnn_with_ann_test(params):
 
     weight_l2_a = tf.reduce_sum(
         [tf.nn.l2_loss(weight1_a), tf.nn.l2_loss(weight2_a), tf.nn.l2_loss(weight3_a), tf.nn.l2_loss(weighto_a)])
+    weight_l2_a = tf.reduce_sum(
+        [tf.nn.l2_loss(embedding)])
 
     target_loss_a = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(ys_pre_a, ys_a))
     loss_a = target_loss_a + params['beta1'] * weight_l2_a
@@ -1454,6 +2071,8 @@ def pnn_with_ann_test(params):
 
     weight_l2_b = tf.reduce_sum(
         [tf.nn.l2_loss(weight1_b), tf.nn.l2_loss(weight2_b), tf.nn.l2_loss(weight3_b), tf.nn.l2_loss(weighto_b)])
+    weight_l2_b = tf.reduce_sum(
+        [tf.nn.l2_loss(embedding)])
 
     target_loss_b = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(ys_pre_b, ys_b))
     loss_b = target_loss_b + params['beta2'] * weight_l2_b
@@ -1547,7 +2166,7 @@ def pnn_with_ann_test(params):
             if (cur_auc - pre_auc) < 0.0001:
                 stop_count += 1
             pre_auc = cur_auc
-            if stop_count == 4:
+            if stop_count == 20 or i==(params['round']-1):
                 if params['store_test_result']:
                     store_obj(store_dict, params['pnn2_test_result_file_path'])
                 break
@@ -2357,81 +2976,96 @@ def show_params_test_result(params):
     pl.show()
 
 def show_noise_exp_result(data_name):
-    x_list = range(0, 101, 20)
-    figure = plt.figure()
-    axes = figure.add_subplot(111)
-
-    fmt1 = '%d%%'
-    xticks = mtick.FormatStrFormatter(fmt1)
-    axes.xaxis.set_major_formatter(xticks)
-    plt.xticks(fontsize=18)
-    plt.yticks(fontsize=18)
-
-    m_list = ['pnn2', 'pnn1', 'mf']
-    color_list = ['b-o', 'g-^', 'r-*']
+    x_list = range(25, 101, 25)
+    model_list = ['mf', 'pnn1', 'pnn2']
+    name_list = ['MF', 'DLP', 'DLP-A']
+    color_list = ['r-^', 'g-o', 'b-D']
     result_dict = {'openflights1':{'mf':[0.9572, 0.9467, 0.9293, 0.9233, 0.9143, 0.9065],
                                   'pnn1':[0.9811, 0.9701, 0.9520, 0.9525, 0.9399, 0.9381],
-                                  'pnn2':[0.9832, 0.9717, 0.9658, 0.9556, 0.9496, 0.9446]
-                                  },
+                                  'pnn2':[0.9832, 0.9717, 0.9658, 0.9556, 0.9496, 0.9446]},
                    'openflights2':{'mf':[0.9593+0.003, 0.9486-0.002, 0.9338, 0.9238, 0.9206, 0.9145],#new
                                    'pnn1':[0.9861-0.002, 0.9667, 0.9525, 0.9521, 0.9457, 0.9439],
                                    'pnn2':[0.9894-0.002, 0.9803, 0.9744, 0.9574, 0.9544, 0.9530]},
+                   'openflights3':{'pnn1': [0.99075832861146507, 0.97604316977386696, 0.96977126701884175, 0.96236365294464987, 0.95788420061457402, 0.95663815662056106],
+                                   'pnn2': [0.99315428042527631, 0.97554675904307753, 0.96528435878899277, 0.96000875324379664, 0.95840317919405138, 0.95561271618516064],
+                                   'mf': [0.97006303509564085, 0.95445736806375314, 0.94416306413476192, 0.93783556284057468, 0.93323764626385208, 0.92672958538910688]},
+                   'openflights4':{'pnn1': [0.9730954034663345, 0.9655550500627299, 0.96629666593332297, 0.95813544381752169, 0.9582027994529394],
+                                   'pnn2': [0.97528967188157412, 0.96476883245028966, 0.96299017352574068, 0.95602893015380797, 0.95945613345110903],
+                                   'mf': [0.95141416006001356, 0.9413323435656048, 0.93390851470604863, 0.9322243014323629, 0.92650913429326753]},
+                   'openflights5':{'mf': [0.94730984876471958, 0.93800820913303862, 0.92674947741537361, 0.92184233208025501],
+                                   'pnn1': [0.97218554526101231, 0.96436963923761532, 0.9542227836016467, 0.95372539630313635],
+                                   'pnn2': [0.97356843903454282, 0.96544950686822628, 0.95666797417487492, 0.95462786442961822]},
                    'pokec1':{'mf':[0.9523, 0.9287, 0.9164, 0.9005, 0.8934, 0.8832],
                             'pnn1':[0.9671, 0.9514, 0.9391, 0.9316, 0.9294, 0.9225],
                             'pnn2':[0.9713, 0.9598, 0.9489, 0.9443, 0.9326, 0.9259]
-                            }
+                            },
+                   'pokec2':{'pnn1': [0.95229990504569773, 0.94265299899362553, 0.937033, 0.934093],
+                             'pnn2': [0.96364183059640063, 0.95891139202499409, 0.955303348198834, 0.949712],
+                             'mf': [0.92648663453671065, 0.91347169270626072, 0.90372507255517887, 0.892411]}
                    }
-    # result_dict = {'openflights': {'mf': [0.9542, 0.9425, 0.9292, 0.9208, 0.9127, 0.9123],
-    #                                'pnn1': [0.9789, 0.9566, 0.9514, 0.9452, 0.9415, 0.9314],
-    #                                'pnn2': [0.9855, 0.9753, 0.9657, 0.9606, 0.9492, 0.9451]
-    #                                },
-    #                'small': {'mf': [0.9529, 0.9393, 0.9285, 0.9176, 0.9109, 0.9034],
-    #                          'pnn1': [0.9683, 0.9510, 0.9448, 0.9334, 0.9263, 0.9236],
-    #                          'pnn2': [0.9702, 0.9592, 0.9502, 0.9443, 0.9323 + 0.004, 0.9348]
-    #                          }
-    #                }
+
+
     show_dict = result_dict[data_name]
 
-    # for i in range(len(m_list)):
-    #     y_list = show_dict[m_list[i]]
-    #     axes.plot(x_list, y_list, color_list[i], label=m_list[i], linewidth=2.0)
-    for i in range(1,3):
-        y_list = [show_dict['pnn%d'%i][j]-show_dict['mf'][j] for j in range(len(show_dict['mf']))]
-        axes.plot(x_list, y_list, color_list[i], label=m_list[i], linewidth=2.0)
-
-    plt.xlabel('noise intensity', fontsize=20)
-    plt.ylabel('auc', fontsize=20)
-    plt.title('auc related to noise intensity in %s'%data_name[0:-1], fontsize=20)
-
-    plt.legend(fontsize=20, loc=1)
+    # figure = plt.figure()
+    # plt.style.use('classic')
+    # axes = figure.add_subplot(111)
+    #
+    # fmt1 = '%d%%'
+    # fmt2 = '%.2f%%'
+    # xticks = mtick.FormatStrFormatter(fmt1)
+    # yticks = mtick.FormatStrFormatter(fmt2)
+    # axes.xaxis.set_major_formatter(xticks)
+    # axes.yaxis.set_major_formatter(yticks)
+    # plt.xticks(np.arange(25,101,25),fontsize=18)
+    # # plt.yticks(np.arange(3.0, 6.1, 1.0), fontsize=18)
+    # # plt.xlim([20, 105])
+    # # plt.ylim([2.4, 6.0])
+    # plt.yticks(np.arange(2.4,3.6,0.4),fontsize=18)
+    # plt.xlim([20, 105])
+    # plt.ylim([2.4,3.4])
+    #
+    # for i in range(1,3):
+    #     y_list = [100*(show_dict['pnn%d'%i][j]-show_dict['mf'][j]) for j in range(len(show_dict['mf']))]
+    #     axes.plot(x_list, y_list, color_list[i], label=name_list[i]+' ~ MF', linewidth=2.0, markersize=10)
+    #
+    # plt.xlabel('Noise Intensity', fontsize=22)
+    # plt.ylabel('Improvement (AUC)', fontsize=22)
+    # plt.title(data_name[0].swapcase()+data_name[1:-1]+' Dataset', fontsize=24)
+    #
+    # plt.legend(fontsize=18, loc=2)
+    # plt.grid()
+    # plt.tight_layout()
 
     figure = plt.figure()
+    plt.style.use('classic')
     n_groups = len(result_dict[data_name]['mf'])
     index = np.arange(n_groups)
-    bar_width = 0.24
-    opacity = 0.4
+    bar_width = 0.22
+    opacity = 0.75
     model_list = ['mf','pnn1', 'pnn2']
-    name_list = ['MF', 'DLPM', 'DLPM-N']
-    color_list = ['g', 'b', 'r']
+    name_list = ['MF', 'DLP', 'DLP-A']
+    color_list = ['r', 'g', 'b']
     # hatch_list = ['////','||||----']
 
     for i in range(len(model_list)):
         model_name = model_list[i]
-        bar_list = plt.bar(index + bar_width * i, result_dict[data_name][model_name], bar_width,
+        bar_list = plt.bar(index + bar_width * i + (1-3*bar_width)*0.5, result_dict[data_name][model_name], bar_width,
                            alpha=opacity, color=color_list[i],
                            label=name_list[i])
         # [bar.set_hatch(hatch_list[i]) for bar in bar_list]
 
-    plt.xlabel('noise intensity', fontsize=20)
-    plt.ylabel('auc', fontsize=20)
-    plt.title('auc related to noise intensity in %s'%data_name[0:-1], fontsize=20)
+    plt.xlabel('Noise Intensity', fontsize=22)
+    plt.ylabel('AUC', fontsize=22)
+    plt.title('Openflights Dataset', fontsize=24)
 
-    plt.xticks(index - 0.2 + 2 * bar_width, ['%d%%'% n for n in x_list], fontsize=18)
+    plt.xticks(index + (1-3*bar_width)*0.5 + 1.5 * bar_width, ['%d%%'% n for n in x_list], fontsize=18)
 
     plt.yticks(fontsize=18)  # change the num axis size
 
-    plt.ylim(0.87, 0.989)  # The ceil
-    plt.legend(fontsize=14, ncol=3, loc=2)
+    plt.ylim(0.87, 0.999)  # The ceil
+    plt.legend(fontsize=18, ncol=3, loc=2)
+    plt.grid()
     plt.tight_layout()
 
     plt.show()
@@ -2475,29 +3109,36 @@ def show_params_exp_result(param_name):
                    }
     n_groups = len(result_dict['pnn1'][param_name]['x_list'])
     index = np.arange(n_groups)
-    bar_width = 0.24
-    opacity = 0.4
+    bar_width = 0.32
+    opacity = 0.75
     model_list = ['pnn1', 'pnn2']
-    name_list = ['DLPM', 'DLPM-N']
+    name_list = ['DLP', 'DLP-A']
     color_list = ['g', 'b']
     # hatch_list = ['////','||||----']
+    # ratio=1.4
+    plt.figure()
+    plt.style.use('classic')
 
     for i in range(len(model_list)):
         model_name = model_list[i]
-        bar_list = plt.bar(index + bar_width * i, result_dict[model_name][param_name]['y_list'], bar_width, alpha=opacity, color=color_list[i],
+        bar_list = plt.bar(index +bar_width*0.5 + bar_width * i, result_dict[model_name][param_name]['y_list'], bar_width, alpha=opacity, color=color_list[i],
                 label=name_list[i])
         # [bar.set_hatch(hatch_list[i]) for bar in bar_list]
 
-    plt.xlabel(' '.join(param_name.split('_')), fontsize=20)
-    plt.ylabel('auc', fontsize=20)
-    plt.title('auc related to %s'%' '.join(param_name.split('_')), fontsize=20)
+    plt.xlabel('(b) Embedding Size', fontsize=22)
+    # plt.xlabel('Embedding Size\n(b)', fontsize=22)
+    plt.ylabel('AUC', fontsize=22)
+    # plt.title('(c)', fontsize=24)
 
-    plt.xticks(index - 0.2 + 2 * bar_width, result_dict[model_name][param_name]['x_list'], fontsize=18)
+    plt.xticks(index+ 1.5 * bar_width, result_dict[model_name][param_name]['x_list'], fontsize=18)
 
-    plt.yticks(fontsize=18)  # change the num axis size
+    plt.yticks(np.arange(0.940,0.981,0.01),fontsize=18)  # change the num axis size
 
-    plt.ylim(0.945, 0.980)  # The ceil
-    plt.legend(fontsize=16, ncol=3, loc=2)
+    plt.ylim(0.939, 0.981)  # The ceil
+    plt.legend(fontsize=18, ncol=3, loc=2)
+    # plt.rc('grid', linestyle='', color='black')
+    # plt.grid(linestyle='--')
+    plt.grid(True)
     plt.tight_layout()
     plt.show()
 
@@ -2522,63 +3163,71 @@ def show_completeness_test_result(params):
     dir_ = dir + 'completeness/'
     data_name = path_list[-1].split('_')[0]
     version = params['version']
-    model_list = ['mf', 'pnn1', 'pnn2']
-    name_list = ['MF', 'DLPM', 'DLPM-N']
-    color_list = ['r', 'g', 'b']
     store_dict = load_obj(dir_ + '%s_completeness_result_v%d' % (data_name, version))
+
+    model_list = ['mf', 'pnn1', 'pnn2']
+    name_list = ['MF', 'DLP', 'DLP-A']
+    color_list = ['r', 'g', 'b']
 
     n_groups = 4
     index = np.arange(n_groups)
-    bar_width = 0.15
-    opacity = 0.4
+    bar_width = 0.22
+    opacity = 0.75
+
+    print store_dict
+
+    plt.figure()
+    plt.style.use('classic')
 
     for i in range(len(model_list)):
         model_name = model_list[i]
-        plt.bar(index + bar_width * i, store_dict[model_name], bar_width, alpha = opacity, color = color_list[i], label = name_list[i])
+        plt.bar(index + bar_width * (i+0.7), store_dict[model_name], bar_width, alpha = opacity, color = color_list[i], label = name_list[i])
 
-    plt.xlabel('completeness', fontsize=20)
-    plt.ylabel('auc', fontsize=20)
-    plt.title('auc related to completeness', fontsize=20)
+    plt.xlabel('Completeness', fontsize=22)
+    plt.ylabel('AUC', fontsize=22)
+    plt.title('Openflights Dataset', fontsize=24)
 
-    plt.xticks(index - 0.2 + 2 * bar_width, ('20%', '40%', '60%', '80%'), fontsize = 18)
+    plt.xticks(index + 2.2 * bar_width, ('20%', '40%', '60%', '80%'), fontsize = 18)
+    plt.yticks(np.arange(0.8, 1.04, 0.05), fontsize=18)
 
-    plt.yticks(fontsize=18)  # change the num axis size
-
-    plt.ylim(0.5, 1.09)  # The ceil
-    plt.legend(fontsize=16, ncol=3, loc=2)
+    plt.ylim(0.8, 1.04)
+    plt.legend(fontsize=18, ncol=3, loc=2)
+    plt.grid(True)
     plt.tight_layout()
-    # plt.show()
 
-    path_list = params['source_file_path'].split('/')
-    dir = '/'.join(path_list[0:-1]) + '/'
-    dir_ = dir + 'completeness/'
-    data_name = path_list[-1].split('_')[0]
-    version = params['version']
-    color_list = ['g', 'b']
-    store_dict = load_obj(dir_ + '%s_completeness_result_v%d' % (data_name, version))
 
-    x_list = range(20, 100, 20)
-    figure = plt.figure()
-    axes = figure.add_subplot(111)
 
-    fmt1 = '%d%%'
-    fmt2 = '%d%%'
-    xticks = mtick.FormatStrFormatter(fmt1)
-    yticks = mtick.FormatStrFormatter(fmt2)
-    axes.xaxis.set_major_formatter(xticks)
-    axes.yaxis.set_major_formatter(yticks)
-    plt.xticks(fontsize=18)
-    plt.yticks(fontsize=18)
 
-    for i in [2,1]:
-        y_list = [t*100.0 for t in sub_list(store_dict['pnn%d'%i], store_dict['mf'])]
-        axes.plot(x_list, y_list, color_list[i-1]+'-o', label = name_list[i], linewidth=2.0)
 
-    plt.xlabel('completeness', fontsize=20)
-    plt.ylabel('improved auc', fontsize=20)
-    plt.title('improved auc related to completeness', fontsize=20)
-
-    plt.legend(fontsize=20, loc=1)
+    # color_list = ['g-o', 'b-D']
+    # store_dict = load_obj(dir_ + '%s_completeness_result_v%d' % (data_name, version))
+    # x_list = range(20, 100, 20)
+    # figure = plt.figure()#figsize=(6,4))
+    # plt.style.use('classic')
+    # axes = figure.add_subplot(111)
+    #
+    # fmt1 = '%d%%'
+    # fmt2 = '%.2f%%'
+    # xticks = mtick.FormatStrFormatter(fmt1)
+    # yticks = mtick.FormatStrFormatter(fmt2)
+    # axes.xaxis.set_major_formatter(xticks)
+    # axes.yaxis.set_major_formatter(yticks)
+    # plt.xticks(np.arange(20,100,20),fontsize=18)
+    # plt.yticks(fontsize=18)
+    # plt.xlim([10,90])
+    # plt.ylim([1.5,6.5])
+    #
+    # for i in [2,1]:
+    #     y_list = [t*100.0 for t in sub_list(store_dict['pnn%d'%i], store_dict['mf'])]
+    #     axes.plot(x_list, y_list, color_list[i-1], label = name_list[i]+' ~ MF', linewidth=2.0, markersize=10)
+    #
+    # plt.xlabel('Completeness', fontsize=22)
+    # plt.ylabel('Improvement (AUC)', fontsize=22)
+    # plt.title('Pokec Dataset', fontsize=24)
+    #
+    # plt.legend(fontsize=18, loc=1)
+    # plt.grid(True)
+    # plt.tight_layout()
 
     plt.show()
 
@@ -2672,12 +3321,17 @@ def base_exp(params):
                          'mf_test_result_file_path': dir + '%s_mf_test_result_v%d' % (data_name, version)})
     if len(params['pnn1_test'])>0:
         p = params['pnn1_test']
+        lr = 1e-2
+        bt = 1e-4
+        if 'learning_rate' in p and 'beta' in p:
+            lr = p['learning_rate']
+            bt = p['beta']
         pnn_test({'dtrain_file_path': dir + '%s_train_data_v%d' % (data_name, version),
              'dtest_file_path': dir + '%s_test_data_v%d' % (data_name, version),
              'model_save_path': dir + '%s_data_pnn_model_params_saver_v%d' % (data_name, version),
              'embedding_size': 20, 'node_num': node_num,
              'h1_size': 20, 'h2_size': 20, 'h3_size': 20, 'h4_size': 20,
-             'batch_size': 5000, 'round': p['round'], 'learning_rate': 4e-3, 'beta': 4e-4,
+             'round': p['round'], 'learning_rate': lr, 'beta': bt, 'batch_size': 3000, #'learning_rate': 4e-3, 'beta': 4e-4, 'batch_size': 5000,
              'store_test_result': params['store_test_result'],
              'pnn1_test_result_file_path': dir + '%s_pnn1_test_result_v%d' % (data_name, version)})
     if params['pnn1']:
@@ -2731,17 +3385,35 @@ def base_exp(params):
                         })
     if len(params['show_embedding_distribution'])>0:
         p = params['show_embedding_distribution']
-        show_embedding_distribution({'mf_test_result_file_path': dir + '%s_mf_test_result_v%d' % (data_name, version),
-                        'pnn1_test_result_file_path': dir + '%s_pnn1_test_result_v%d' % (data_name, version),
-                        'pnn2_test_result_file_path': dir + '%s_pnn2_test_result_v%d' % (data_name, version),
-                        'neighbor_set_list_file_path': dir + '%s_train_neighbor_set_list_v%d' % (data_name, version),
-                        'x_max': p['x_max'],
-                        'x_min': p['x_min'],
-                        'x_step': p['x_step'],
-                        'y_max': p['y_max'],
-                        'y_min': p['y_min'],
-                        'data_name': data_name
-                        })
+        # show_embedding_distribution({'mf_test_result_file_path': dir + '%s_mf_test_result_v%d' % (data_name, version),
+        #                 'pnn1_test_result_file_path': dir + '%s_pnn1_test_result_v%d' % (data_name, version),
+        #                 'pnn2_test_result_file_path': dir + '%s_pnn2_test_result_v%d' % (data_name, version),
+        #                 'neighbor_set_list_file_path': dir + '%s_train_neighbor_set_list_v%d' % (data_name, version),
+        #                 'x_max': p['x_max'],
+        #                 'x_min': p['x_min'],
+        #                 'x_step': p['x_step'],
+        #                 'y_max': p['y_max'],
+        #                 'y_min': p['y_min'],
+        #                 'data_name': data_name
+        #                 })
+        show_embedding_distribution_v2({'mf_test_result_file_path': dir + '%s_mf_test_result_v%d' % (data_name, version),
+                                     'pnn1_test_result_file_path': dir + '%s_pnn1_test_result_v%d' % (
+                                     data_name, version),
+                                     'pnn2_test_result_file_path': dir + '%s_pnn2_test_result_v%d' % (
+                                     data_name, version),
+                                     'neighbor_set_list_file_path': dir + '%s_train_neighbor_set_list_v%d' % (
+                                     data_name, version),
+                                     'x_max': p['x_max'],
+                                     'x_min': p['x_min'],
+                                     'x_step': p['x_step'],
+                                     'y_max': p['y_max'],
+                                     'y_min': p['y_min'],
+                                     'data_name': data_name,
+                                     'node_num': node_num,
+                                     'one_hop_plinks_file_path': dir + '%s_data'%data_name,
+                                     'two_hop_plinks_file_path': dir + '%s_hop2_train_positive_data_v%d' % (data_name, version)
+                                     })
+
     # if len(params['pnn1_test2'])>0:
     #     p = params['pnn1_test2']
     #     pnn_test2({'dtrain_file_path': dir + '%s_train_data_v%d' % (data_name, version),
@@ -2820,42 +3492,138 @@ def noise_exp(params):
     version = params['version']
     node_num = get_max_node_num(params['source_file_path'])
 
-    for i in range(len(params['ns_rate_list'])):
-        nsr = params['ns_rate_list'][i]
-        if i>0:
-            nsr=(params['ns_rate_list'][i]-params['ns_rate_list'][i-1])/(1+params['ns_rate_list'][i-1])
+    train_np_rate=20
 
-        add_noise(dir + '%s_train_positive_data_v%d' % (data_name, version),
-                  dir + '%s_test_positive_data_v%d' % (data_name, version),
-                  node_num,
-                  nsr)
+    result_dict={'mf':[],'pnn1':[],'pnn2':[]}
 
-        divide_data_e2e({'source_file_path': params['source_file_path'],
-                     'version': version,
-                     'tt_rate': 4,
-                     'train_np_rate': 80,
-                     'test_np_rate': 80,
-                     'new_divide': False,
-                     'new_tt_data': True,
-                     'get_neighbor_set': True,
-                     'get_katz_matrix': False,
-                     'exact_katz': True,
-                     'get_rwr_matrix': False,
-                     'exact_rwr': True,
-                     'get_hop2_data': True,
-                     'random_p': False})
+    pnn1_l_list = [1e-2, 1e-2, 1e-2, 1e-2]
+    pnn1_b_list = [3e-5, 1e-6, 1e-6, 1e-6]
+    pnn2_l_list = [1e-3, 1e-3, 1e-3, 1e-3]
+    pnn2_b_list = [1e-5, 1e-5, 1e-5, 1e-5]
 
-        base_exp({'source_file_path': params['source_file_path'],
-              'version': version,
-              'train_np_rate': 80,
-              'baseline_set': set(['mf']),
-              'pnn1_test': {'round': 25},
-              'pnn1': False,
-              'fixed_emb_pnn2': False,
-              'pnn2_test': {'learning_rate1': 4e-3, 'learning_rate2': 4e-3, 'beta1': 4e-4, 'beta2': 4e-4, 'hop2_np_rate': 20, 'round': 25},
-              'pnn2': False,
-              'store_test_result': False,
-              'show_auc_curve': {}})
+    if params['new_data']:
+        for i in range(0, len(params['ns_rate_list'])):
+            nsr = params['ns_rate_list'][i]
+            # if i > 0:
+            #     nsr = (params['ns_rate_list'][i] - params['ns_rate_list'][i - 1]) / (1 + params['ns_rate_list'][i - 1])
+
+            add_noise(dir + '%s_train_positive_data_v%d' % (data_name, version),
+                      dir + '%s_train_positive_data_v%d_n%d' % (data_name, version, i),
+                      dir + '%s_test_positive_data_v%d' % (data_name, version),
+                      node_num,
+                      nsr)
+
+            divide_data_e2e({'source_file_path': params['source_file_path'],
+                             'version': version,
+                             'tt_rate': 4,
+                             'train_np_rate': 20,
+                             'test_np_rate': 20,
+                             'new_divide': False,
+                             'new_tt_data': True,
+                             'get_neighbor_set': True,
+                             'get_katz_matrix': False,
+                             'exact_katz': True,
+                             'get_rwr_matrix': False,
+                             'exact_rwr': True,
+                             'get_hop2_data': True,
+                             'random_p': False})
+
+            sample_negative_data(dir + '%s_train_positive_data_v%d_n%d' % (data_name, version, i),
+                                 dir + '%s_train_negative_data_v%d_n%d' % (data_name, version, i),
+                                 params['train_np_rate'],
+                                 node_num,
+                                 [])
+            sample_negative_data(dir + '%s_test_positive_data_v%d' % (data_name, version),
+                                 dir + '%s_test_negative_data_v%d_n%d' % (data_name, version, i),
+                                 params['test_np_rate'],
+                                 node_num,
+                                 [dir + '%s_train_positive_data_v%d_n%d' % (data_name, version, i),
+                                 dir + '%s_train_negative_data_v%d_n%d' % (data_name, version, i)])
+            get_tdata_with_lable(dir + '%s_train_positive_data_v%d_n%d' % (data_name, version, i),
+                                 dir + '%s_train_negative_data_v%d_n%d' % (data_name, version, i),
+                                 dir + '%s_train_data_v%d_n%d' % (data_name, version, i))
+            get_tdata_with_lable(dir + '%s_test_positive_data_v%d' % (data_name, version),
+                                 dir + '%s_test_negative_data_v%d_n%d' % (data_name, version, i),
+                                 dir + '%s_test_data_v%d_n%d' % (data_name, version, i))
+
+            get_neighbor_set(dir + '%s_train_positive_data_v%d_n%d' % (data_name, version, i),
+                             dir + '%s_train_neighbor_set_list_v%d_n%d' % (data_name, version, i),
+                             node_num)
+
+            get_hop2_link(dir + '%s_train_positive_data_v%d_n%d' % (data_name, version, i),
+                          dir + '%s_hop2_train_positive_data_v%d_n%d' % (data_name, version, i),
+                          dir + '%s_train_neighbor_set_list_v%d_n%d' % (data_name, version, i),
+                          params['random_p'], 10)
+
+        # nsr = params['ns_rate_list'][i]
+        # if i>0:
+        #     nsr=(params['ns_rate_list'][i]-params['ns_rate_list'][i-1])/(1+params['ns_rate_list'][i-1])
+        #
+        # add_noise(dir + '%s_train_positive_data_v%d' % (data_name, version),
+        #           dir + '%s_test_positive_data_v%d' % (data_name, version),
+        #           node_num,
+        #           nsr)
+        #
+        # divide_data_e2e({'source_file_path': params['source_file_path'],
+        #              'version': version,
+        #              'tt_rate': 4,
+        #              'train_np_rate': 20,
+        #              'test_np_rate': 20,
+        #              'new_divide': False,
+        #              'new_tt_data': True,
+        #              'get_neighbor_set': True,
+        #              'get_katz_matrix': False,
+        #              'exact_katz': True,
+        #              'get_rwr_matrix': False,
+        #              'exact_rwr': True,
+        #              'get_hop2_data': True,
+        #              'random_p': False})
+
+        # base_exp({'source_file_path': params['source_file_path'],
+        #       'version': version,
+        #       'train_np_rate': 20,
+        #       'baseline_set': set(['mf']),
+        #       'pnn1_test': {'learning_rate': 1e-2, 'beta': 1e-5, 'round': 40},
+        #       'pnn1': False,
+        #       'fixed_emb_pnn2': False,
+        #       'pnn2_test': {'learning_rate1': 1e-4, 'learning_rate2': 1e-4, 'beta1': 1e-5, 'beta2': 1e-5, 'hop2_np_rate': 10, 'round': 25},
+        #       'pnn2': False,
+        #       'store_test_result': False,
+        #       'show_auc_curve': {},
+        #       'show_embedding_distribution': {}})
+
+    for i in range(0, len(params['ns_rate_list'])):
+        # result_dict['mf'].append(mf_with_sigmoid({'dtrain_file_path': dir + '%s_train_data_v%d_n%d' % (data_name, version, i),
+        #                  'dtest_file_path': dir + '%s_test_data_v%d_n%d' % (data_name, version, i),
+        #                  'embedding_size': 20, 'node_num': node_num, 'train_np_rate': train_np_rate,
+        #                  'batch_size': 5000, 'round': 25, 'learning_rate': 5e-3, 'beta': 4e-1,
+        #                  'store_test_result': False,
+        #                  'mf_test_result_file_path': dir + '%s_mf_test_result_v%d' % (data_name, version)}))
+
+        p = {'learning_rate': pnn1_l_list[i], 'beta': pnn1_b_list[i], 'round': 40}
+        result_dict['pnn1'].append(pnn_test({'dtrain_file_path': dir + '%s_train_data_v%d_n%d' % (data_name, version, i),
+                  'dtest_file_path': dir + '%s_test_data_v%d_n%d' % (data_name, version, i),
+                  'model_save_path': dir + '%s_data_pnn_model_params_saver_v%d_n%d' % (data_name, version, i),
+                  'embedding_size': 20, 'node_num': node_num,
+                  'h1_size': 20, 'h2_size': 20, 'h3_size': 20, 'h4_size': 20,
+                  'round': p['round'], 'learning_rate': p['learning_rate'], 'beta': p['beta'], 'batch_size': 3000,
+                  'store_test_result': False,
+                  'pnn1_test_result_file_path': dir + '%s_pnn1_test_result_v%d' % (data_name, version)}))
+
+        p = {'learning_rate1': pnn2_l_list[i], 'learning_rate2': pnn2_l_list[i], 'beta1': pnn2_b_list[i], 'beta2': pnn2_b_list[i], 'round': 25}
+        result_dict['pnn2'].append(pnn_with_ann_test({'dtrain_a_file_path': dir + '%s_train_data_v%d_n%d' % (data_name, version, i),
+                           'dtest_a_file_path': dir + '%s_test_data_v%d_n%d' % (data_name, version, i),
+                           'dtrain_b_file_path': dir + '%s_hop2_train_positive_data_v%d_n%d' % (data_name, version, i),
+                           'pre_model_save_path': dir + '%s_data_pnn_model_params_saver_v%d_n%d' % (data_name, version, i),
+                           'embedding_size': 20, 'node_num': node_num,
+                           'h1_size': 20, 'h2_size': 20, 'h3_size': 20, 'h4_size': 20,
+                           'batch_size': 1000, 'round': p['round'], 'learning_rate1': p['learning_rate1'],
+                           'learning_rate2': p['learning_rate2'], 'beta1': p['beta1'], 'beta2': p['beta2'],
+                           'hop2_np_rate': 2,
+                           'store_test_result': False,
+                           'pnn2_test_result_file_path': dir + '%s_pnn2_test_result_v%d' % (data_name, version)
+                           }))
+        print result_dict
 
 def completeness_exp(params):
     path_list = params['source_file_path'].split('/')
@@ -2921,6 +3689,84 @@ def completeness_exp(params):
                            'h1_size': 20, 'h2_size': 20, 'h3_size': 20, 'h4_size': 20,
                            'batch_size': 5000, 'round': 25, 'learning_rate1': 4e-3,
                            'learning_rate2': 4e-3, 'beta1': pnn2_b_list[i], 'beta2': pnn2_b_list[i],
+                           'hop2_np_rate': params['hop2_np_rate'],
+                           'store_test_result': False,
+                           'pnn2_test_result_file_path': ''
+                           }))
+    print store_dict
+    store_obj(store_dict, dir_ + '%s_completeness_result_v%d' % (data_name, version))
+
+def completeness_exp_v2(params):
+    path_list = params['source_file_path'].split('/')
+    dir = '/'.join(path_list[0:-1]) + '/'
+    dir_ = dir + 'completeness/'
+    data_name = path_list[-1].split('_')[0]
+    version = params['version']
+    node_num = get_max_node_num(params['source_file_path'])
+
+    if params['divide_data']:
+        tmp_list=[]
+        tmp_list.append(params['divide_list'][0])
+        for i in range(len(params['divide_list'])-1):
+            tmp_list.append(params['divide_list'][i+1] - params['divide_list'][i])
+        tmp_list.append(1.0-params['divide_list'][-1])
+        randomly_divide_data_with_accumulation_v2(params['source_file_path'],
+                             [(dir_ + '%s_completeness_positive_data_v%d_part_%d' % (data_name, version, i)) for i in range(1, len(params['divide_list'])+2)],
+                             tmp_list)
+        sample_negative_data(dir_ + '%s_completeness_positive_data_v%d_part_%d' % (data_name, version, len(params['divide_list'])+1),
+                             dir_ + '%s_completeness_negative_data_v%d_part_%d' % (data_name, version, len(params['divide_list'])+1),
+                             params['train_np_rate'],
+                             node_num,
+                             [])
+        for i in range(1, len(params['divide_list'])+1):
+            sample_negative_data(
+                dir_ + '%s_completeness_positive_data_v%d_part_%d' % (data_name, version, i),
+                dir_ + '%s_completeness_negative_data_v%d_part_%d' % (data_name, version, i),
+                params['train_np_rate'],
+                node_num,
+                [dir_ + '%s_completeness_positive_data_v%d_part_%d' % (data_name, version, len(params['divide_list'])+1),
+                dir_ + '%s_completeness_negative_data_v%d_part_%d' % (data_name, version, len(params['divide_list'])+1)])
+            get_neighbor_set(dir_ + '%s_completeness_positive_data_v%d_part_%d' % (data_name, version, i),
+                             dir_ + '%s_completeness_neighbor_set_list_v%d_part_%d' % (data_name, version, i),
+                             node_num)
+            get_hop2_link(dir_ + '%s_completeness_positive_data_v%d_part_%d' % (data_name, version, i),
+                          dir_ + '%s_completeness_hop2_positive_data_v%d_part_%d' % (data_name, version, i),
+                          dir_ + '%s_completeness_neighbor_set_list_v%d_part_%d' % (data_name, version, i),
+                          False, params['h_sample_rate'])
+
+        for i in range(1, len(params['divide_list'])+2):
+            get_tdata_with_lable(dir_ + '%s_completeness_positive_data_v%d_part_%d' % (data_name, version, i),
+                                 dir_ + '%s_completeness_negative_data_v%d_part_%d' % (data_name, version, i),
+                                 dir_ + '%s_completeness_data_v%d_part_%d' % (data_name, version, i))
+
+    store_dict = {'mf': [], 'pnn1': [], 'pnn2': []}
+    pnn1_l_list = [0, 1e-2, 1e-2, 1e-2, 1e-2]
+    pnn1_b_list = [0, 7e-4, 2e-4, 5e-5, 2e-5]
+    pnn2_l_list = [0, 1e-4, 1e-4, 1e-4, 1e-4]
+    pnn2_b_list = [0, 7e-4, 2e-4, 5e-5, 2e-5]
+    for i in range(1, len(params['divide_list'])+1):
+        store_dict['mf'].append(mf_with_sigmoid({'dtrain_file_path': dir_ + '%s_completeness_data_v%d_part_%d' % (data_name, version, i),
+                         'dtest_file_path': dir_ + '%s_completeness_data_v%d_part_%d' % (data_name, version, len(params['divide_list'])+1),
+                         'embedding_size': 20, 'node_num': node_num, 'train_np_rate': params['train_np_rate'],
+                         'batch_size': 5000, 'round': 25, 'learning_rate': 5e-3, 'beta': 4e-1,
+                         'store_test_result': False,
+                         'mf_test_result_file_path': ''}))
+        store_dict['pnn1'].append(pnn_test({'dtrain_file_path': dir_ + '%s_completeness_data_v%d_part_%d' % (data_name, version, i),
+                  'dtest_file_path': dir_ + '%s_completeness_data_v%d_part_%d' % (data_name, version, len(params['divide_list'])+1),
+                  'model_save_path': dir_ + '%s_completeness_model_saver_v%d_part_%d' % (data_name, version, i),
+                  'embedding_size': 20, 'node_num': node_num,
+                  'h1_size': 20, 'h2_size': 20, 'h3_size': 20, 'h4_size': 20,
+                  'batch_size': 1000, 'round': 40, 'learning_rate': pnn1_l_list[i], 'beta': pnn1_b_list[i],
+                  'store_test_result': False,
+                  'pnn1_test_result_file_path': ''}))
+        store_dict['pnn2'].append(pnn_with_ann_test({'dtrain_a_file_path': dir_ + '%s_completeness_data_v%d_part_%d' % (data_name, version, i),
+                           'dtest_a_file_path': dir_ + '%s_completeness_data_v%d_part_%d' % (data_name, version, len(params['divide_list'])+1),
+                           'dtrain_b_file_path': dir_ + '%s_completeness_hop2_positive_data_v%d_part_%d' % (data_name, version, i),
+                           'pre_model_save_path': dir_ + '%s_completeness_model_saver_v%d_part_%d' % (data_name, version, i),
+                           'embedding_size': 20, 'node_num': node_num,
+                           'h1_size': 20, 'h2_size': 20, 'h3_size': 20, 'h4_size': 20,
+                           'batch_size': 1000, 'round': 30, 'learning_rate1': pnn2_l_list[i],
+                           'learning_rate2': pnn2_l_list[i], 'beta1': pnn2_b_list[i], 'beta2': pnn2_b_list[i],
                            'hop2_np_rate': params['hop2_np_rate'],
                            'store_test_result': False,
                            'pnn2_test_result_file_path': ''

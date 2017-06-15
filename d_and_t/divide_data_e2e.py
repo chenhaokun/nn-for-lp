@@ -48,7 +48,7 @@ def randomly_divide_data(source_file_path, target_file_path_list, weight_list):
 
     print('randomly_divide_data completed\n')
 
-def add_noise(source_file_path, except_file_path, node_num, ns_rate):
+def add_noise(source_file_path, target_file_path, except_file_path, node_num, ns_rate):
     print('starting add_noise')
 
     result_list = []
@@ -69,13 +69,41 @@ def add_noise(source_file_path, except_file_path, node_num, ns_rate):
 
         result_list = [line for line in edge_set]
 
-    with open(source_file_path, 'w') as target_file:
+    with open(target_file_path, 'w') as target_file:
         target_file.writelines(result_list)
         print('noise file line count: %d'%len(result_list))
 
     print('add_noise completed\n')
 
 def randomly_divide_data_with_accumulation(source_file_path, target_file_path_list, weight_list):
+    print('starting randomly_divide_data_with_accumulation')
+
+    with open(source_file_path, 'r') as source_file:
+        source_list = source_file.readlines()
+        random.shuffle(source_list)
+        line_num = len(source_list)
+
+        sum = 0
+        for weight in weight_list:
+            sum += weight
+
+        thredhold_list = [0]
+        slide_sum = 0
+        for weight in weight_list:
+            slide_sum += weight
+            thredhold_list.append(int(float(slide_sum) / sum * line_num))
+
+        for i in range(len(target_file_path_list)):
+            with open(target_file_path_list[i], 'w') as target_file:
+                if i == (len(weight_list)-1):
+                    target_file.writelines(source_list[thredhold_list[i]:thredhold_list[i + 1]])
+                else:
+                    target_file.writelines(source_list[thredhold_list[0]:thredhold_list[i+1]])
+                print('\tfile%d adding positive edge count: %d'%(i, thredhold_list[i+1]-thredhold_list[i]))
+
+    print('randomly_divide_data_with_accumulation completed\n')
+
+def randomly_divide_data_with_accumulation_v2(source_file_path, target_file_path_list, weight_list):
     print('starting randomly_divide_data_with_accumulation')
 
     with open(source_file_path, 'r') as source_file:
@@ -233,7 +261,7 @@ def get_hop2_link(source_file_path, target_file_path, neighbor_set_list_file_pat
                     continue
                 for tmp in neighbor_set_list[j-1][1]:
                     if tmp != i:
-                        result_set.add('%d\t%d\n' % (i, tmp))
+                        result_set.add('%d\t%d\n' % (i, tmp+1))
             result_list = [line for line in result_set]
             target_file.writelines(result_list)
         else:
@@ -371,7 +399,7 @@ def divide_data_e2e(params):
         get_hop2_link(dir + '%s_train_positive_data_v%d' % (data_name, version),
                       dir + '%s_hop2_train_positive_data_v%d' % (data_name, version),
                       dir + '%s_train_neighbor_set_list_v%d' % (data_name, version),
-                      params['random_p'], 2)
+                      params['random_p'], 2)#attention
         # sample_negative_data(dir + '%s_hop2_train_positive_data_v%d' % (data_name, version),
         #                      dir + '%s_hop2_train_negative_data_v%d' % (data_name, version),
         #                      params['hop2_np_rate'],
