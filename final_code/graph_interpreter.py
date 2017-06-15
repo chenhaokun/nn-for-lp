@@ -3774,6 +3774,7 @@ def completeness_exp_v2(params):
     print store_dict
     store_obj(store_dict, dir_ + '%s_completeness_result_v%d' % (data_name, version))
 
+
 if __name__ == '__main__':
     # base_exp({'source_file_path': '../../data/test1/cora_data',
     #           'version': 1,
